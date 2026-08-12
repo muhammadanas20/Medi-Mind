@@ -9,3 +9,5 @@ test-results
 playwright-report
 dev-dist
 .DS_Store
+tsconfig.tsbuildinfo
+tsconfig.*.tsbuildinfo
