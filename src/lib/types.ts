@@ -17,6 +17,10 @@ export interface Profile {
   id: string
   name: string
   relation?: string // self / parent / spouse / patient...
+  age?: number
+  weight?: number
+  weightUnit?: 'kg' | 'lbs'
+  gender?: string
   color: string
   avatarEmoji?: string
   createdAt: string

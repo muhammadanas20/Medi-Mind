@@ -4,15 +4,15 @@ import type { AiProviderConfig, AiProviderKind } from '../lib/types'
 import { PROVIDER_PRESETS, testConnection, visionGenerate, type ProviderPreset } from './providers'
 import {
   PILL_PROMPT,
-  PRESCRIPTION_PROMPT,
-  VITAL_PROMPT,
+  buildPrescriptionPrompt,
+  buildVitalPrompt,
   parseExtraction,
   parseVitalExtraction,
   pillObservationSchema,
   extractJsonBlock,
   type PillObservation,
 } from './extract'
-import type { ExtractedPrescription, ExtractedVital } from '../lib/types'
+import type { ExtractedPrescription, ExtractedVital, Profile } from '../lib/types'
 
 /**
  * AI service — the ONLY module that talks to the network.
@@ -100,14 +100,16 @@ export interface ExtractionOutcome {
 export async function extractPrescription(
   imageBase64: string,
   mimeType: string,
+  profile?: Profile,
 ): Promise<ExtractionOutcome> {
   const provider = await getActiveProvider()
   if (!provider) {
     throw new Error('NO_PROVIDER')
   }
   const key = await keyFor(provider)
+  const prompt = buildPrescriptionPrompt(profile)
   const raw = await visionGenerate(provider, key, {
-    prompt: PRESCRIPTION_PROMPT,
+    prompt,
     imageBase64,
     mimeType,
     maxTokens: 4096,
@@ -140,12 +142,14 @@ export interface VitalExtractionOutcome {
 export async function extractVitalReading(
   imageBase64: string,
   mimeType: string,
+  profile?: Profile,
 ): Promise<VitalExtractionOutcome> {
   const provider = await getActiveProvider()
   if (!provider) throw new Error('NO_PROVIDER')
   const key = await keyFor(provider)
+  const prompt = buildVitalPrompt(profile)
   const raw = await visionGenerate(provider, key, {
-    prompt: VITAL_PROMPT,
+    prompt,
     imageBase64,
     mimeType,
     maxTokens: 800,

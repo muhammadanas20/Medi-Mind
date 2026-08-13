@@ -7,6 +7,7 @@ import type {
   FoodInstruction,
   PillColor,
   PillShape,
+  Profile,
   VitalKind,
 } from '../lib/types'
 import { sanitizeExtractedVital } from '../lib/vitals'
@@ -52,6 +53,25 @@ JSON SHAPE
   "followUpDate": string?,         // best-effort ISO date or text
   "notes": string?
 }`
+
+export function buildPrescriptionPrompt(profile?: Profile): string {
+  if (!profile) return PRESCRIPTION_PROMPT
+  const details: string[] = []
+  if (profile.name) details.push(`Name: ${profile.name}`)
+  if (profile.age != null) details.push(`Age: ${profile.age} years old`)
+  if (profile.weight != null) details.push(`Weight: ${profile.weight} ${profile.weightUnit || 'kg'}`)
+  if (profile.gender) details.push(`Gender: ${profile.gender}`)
+  if (profile.relation) details.push(`Relation: ${profile.relation}`)
+
+  if (details.length === 0) return PRESCRIPTION_PROMPT
+
+  return `${PRESCRIPTION_PROMPT}
+
+PATIENT PROFILE FOR CLINICAL DOSAGE CHECKING:
+${details.map((d) => `- ${d}`).join('\n')}
+
+Note: Consider the patient's age (${profile.age ?? 'unspecified'}) and weight (${profile.weight ?? 'unspecified'} ${profile.weightUnit || 'kg'}) when parsing medicines and dosage instructions. If any dosage appears unusual or requires age/weight caution (e.g., pediatric or geriatric considerations), include a brief warning note in the "notes" field.`
+}
 
 const doseCount = z
   .union([z.number(), z.string()])
@@ -207,6 +227,20 @@ JSON SHAPE
   "confidenceNote": string?,
   "recordedAtHint": string?
 }`
+
+export function buildVitalPrompt(profile?: Profile): string {
+  if (!profile) return VITAL_PROMPT
+  const details: string[] = []
+  if (profile.age != null) details.push(`Age: ${profile.age} years old`)
+  if (profile.weight != null) details.push(`Baseline Weight: ${profile.weight} ${profile.weightUnit || 'kg'}`)
+  if (profile.gender) details.push(`Gender: ${profile.gender}`)
+
+  if (details.length === 0) return VITAL_PROMPT
+
+  return `${VITAL_PROMPT}
+
+PATIENT CONTEXT: ${details.join(' · ')}`
+}
 
 const optionalNum = z
   .union([z.number(), z.string()])

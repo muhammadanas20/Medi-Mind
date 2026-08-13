@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Bell, BellRing, BrainCircuit, Check, Clock, Download, KeyRound,
-  Loader2, Lock, LockOpen, Moon, Plus, Sun, TestTubeDiagonal, Trash2, Type, Upload, UserPlus, Users, Vibrate, Waves,
+  Loader2, Lock, LockOpen, Moon, Pencil, Plus, Sun, TestTubeDiagonal, Trash2, Type, Upload, UserPlus, Users, Vibrate, Waves,
 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { InstallAppSection } from '../components/install'
@@ -51,66 +51,288 @@ function ProfilesSection() {
   const active = useActiveProfile()
   const setActive = useSetActiveProfile()
   const showToast = useUiStore((s) => s.showToast)
+
   const [open, setOpen] = useState(false)
+  const [editingProfile, setEditingProfile] = useState<Profile | null>(null)
+
   const [name, setName] = useState('')
+  const [relation, setRelation] = useState('Self')
+  const [age, setAge] = useState('')
+  const [weight, setWeight] = useState('')
+  const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg')
+  const [gender, setGender] = useState('')
   const [emoji, setEmoji] = useState('🧓')
   const [color, setColor] = useState('#07c5a8')
 
-  const add = async () => {
-    if (!name.trim()) return
-    const p: Profile = { id: uid(), name: name.trim(), color, avatarEmoji: emoji, relation: 'Self', createdAt: new Date().toISOString() }
-    await db.profiles.add(p)
-    await setActive(p.id)
-    setOpen(false)
+  const openNew = () => {
+    setEditingProfile(null)
     setName('')
-    showToast(`Profile “${p.name}” created`, 'success')
+    setRelation('Self')
+    setAge('')
+    setWeight('')
+    setWeightUnit('kg')
+    setGender('')
+    setEmoji('🧓')
+    setColor('#07c5a8')
+    setOpen(true)
+  }
+
+  const openEdit = (p: Profile) => {
+    setEditingProfile(p)
+    setName(p.name)
+    setRelation(p.relation || 'Self')
+    setAge(p.age != null ? p.age.toString() : '')
+    setWeight(p.weight != null ? p.weight.toString() : '')
+    setWeightUnit(p.weightUnit || 'kg')
+    setGender(p.gender || '')
+    setEmoji(p.avatarEmoji || '🧓')
+    setColor(p.color || '#07c5a8')
+    setOpen(true)
+  }
+
+  const save = async () => {
+    if (!name.trim()) return
+    const parsedAge = age ? parseInt(age) || undefined : undefined
+    const parsedWeight = weight ? parseFloat(weight) || undefined : undefined
+
+    if (editingProfile) {
+      await db.profiles.update(editingProfile.id, {
+        name: name.trim(),
+        relation,
+        age: parsedAge,
+        weight: parsedWeight,
+        weightUnit,
+        gender: gender || undefined,
+        avatarEmoji: emoji,
+        color,
+      })
+      showToast(`Profile “${name.trim()}” updated`, 'success')
+    } else {
+      const p: Profile = {
+        id: uid(),
+        name: name.trim(),
+        relation,
+        age: parsedAge,
+        weight: parsedWeight,
+        weightUnit,
+        gender: gender || undefined,
+        color,
+        avatarEmoji: emoji,
+        createdAt: new Date().toISOString(),
+      }
+      await db.profiles.add(p)
+      await setActive(p.id)
+      showToast(`Profile “${p.name}” created`, 'success')
+    }
+    setOpen(false)
+  }
+
+  const deleteProfile = async (p: Profile) => {
+    if ((profiles ?? []).length <= 1) {
+      showToast('You must keep at least one profile', 'error')
+      return
+    }
+    if (!confirm(`Delete profile for ${p.name}?`)) return
+
+    if (p.id === active?.id) {
+      const other = profiles?.find((x) => x.id !== p.id)
+      if (other) await setActive(other.id)
+    }
+    await db.profiles.delete(p.id)
+    showToast(`Profile “${p.name}” deleted`)
   }
 
   return (
     <Card>
-      <SectionTitle right={<Button size="sm" variant="subtle" onClick={() => setOpen(true)}><UserPlus /> New</Button>}>
+      <SectionTitle right={<Button size="sm" variant="subtle" onClick={openNew} data-testid="new-profile"><UserPlus /> New profile</Button>}>
         <span className="inline-flex items-center gap-2"><Users className="size-5" /> Profiles</span>
       </SectionTitle>
-      <div className="flex flex-wrap gap-2">
-        {(profiles ?? []).map((p) => (
-          <button
-            key={p.id}
-            onClick={() => void setActive(p.id)}
-            className={
-              p.id === active?.id
-                ? 'flex cursor-pointer items-center gap-2 rounded-2xl border border-brand-500/50 bg-brand-500/10 px-4 py-2.5'
-                : 'flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-300/60 px-4 py-2.5 transition hover:bg-slate-200/50 dark:border-white/10 dark:hover:bg-white/5'
-            }
-          >
-            <span className="flex size-7 items-center justify-center rounded-full text-sm" style={{ background: `${p.color}33` }}>{p.avatarEmoji ?? '👤'}</span>
-            <span className="text-sm font-bold">{p.name}</span>
-            {p.id === active?.id && <Check className="size-4 text-brand-500" />}
-          </button>
-        ))}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {(profiles ?? []).map((p) => {
+          const isActive = p.id === active?.id
+          return (
+            <div
+              key={p.id}
+              className={
+                isActive
+                  ? 'rounded-2xl border border-brand-500/50 bg-brand-500/[0.08] p-4 space-y-3'
+                  : 'rounded-2xl border border-slate-300/60 p-4 space-y-3 dark:border-white/10'
+              }
+            >
+              <div className="flex items-start gap-3">
+                <span
+                  className="flex size-11 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-sm"
+                  style={{ background: `${p.color}25` }}
+                >
+                  {p.avatarEmoji ?? '👤'}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="text-base font-bold">{p.name}</p>
+                    {isActive && <Badge tone="brand"><Check className="size-3" /> Active</Badge>}
+                    {p.relation && <Badge tone="neutral">{p.relation}</Badge>}
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    {[
+                      p.age != null ? `${p.age} yrs` : null,
+                      p.weight != null ? `${p.weight} ${p.weightUnit || 'kg'}` : null,
+                      p.gender,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ') || 'No age or weight set'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1 border-t border-slate-200/60 dark:border-white/8">
+                {!isActive && (
+                  <Button size="sm" variant="subtle" className="flex-1" onClick={() => void setActive(p.id)}>
+                    Switch to profile
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" className={isActive ? 'flex-1' : ''} onClick={() => openEdit(p)}>
+                  <Pencil className="size-3.5" /> Edit
+                </Button>
+                {(profiles ?? []).length > 1 && (
+                  <Button size="iconsm" variant="ghost" className="text-danger-500" onClick={() => void deleteProfile(p)} aria-label={`Delete ${p.name}`}>
+                    <Trash2 className="size-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          )
+        })}
         {(profiles ?? []).length === 0 && (
           <p className="text-sm text-slate-400">No profiles — create one for each family member you manage.</p>
         )}
       </div>
-      <Dialog open={open} onClose={() => setOpen(false)} title="New profile">
+
+      <Dialog open={open} onClose={() => setOpen(false)} title={editingProfile ? 'Edit Profile' : 'New Profile'}>
         <div className="space-y-4">
-          <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Grandma Rosa" autoFocus={window.matchMedia('(pointer: fine)').matches} /></Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Emoji">
-              <div className="flex gap-1.5">
-                {['🧓', '👵', '👴', '🧑', '👶', '🐕'].map((e) => (
-                  <button key={e} onClick={() => setEmoji(e)} className={`flex size-9 cursor-pointer items-center justify-center rounded-xl text-lg ${emoji === e ? 'bg-brand-500/20 ring-2 ring-brand-500/50' : 'bg-slate-200/60 dark:bg-white/8'}`}>{e}</button>
+          <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+            Age and weight enable AI to evaluate medication dosages and provide tailored safety checks.
+          </p>
+
+          <div className="space-y-3">
+            <Field label="Full Name">
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Grandma Rosa or John Doe"
+                data-testid="profile-name"
+                className="!h-12 !text-base"
+                autoFocus={window.matchMedia('(pointer: fine)').matches}
+              />
+            </Field>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Relationship">
+                <Select value={relation} onChange={(e) => setRelation(e.target.value)} className="!h-12 !text-base">
+                  <option value="Self">Self (Me)</option>
+                  <option value="Parent">Parent</option>
+                  <option value="Spouse">Spouse</option>
+                  <option value="Child">Child</option>
+                  <option value="Patient">Patient</option>
+                  <option value="Other">Other</option>
+                </Select>
+              </Field>
+
+              <Field label="Gender (Optional)">
+                <Select value={gender} onChange={(e) => setGender(e.target.value)} className="!h-12 !text-base">
+                  <option value="">Unspecified</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </Select>
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Age (Years)" hint="For AI dose safety checks">
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  placeholder="e.g. 68"
+                  data-testid="profile-age"
+                  className="!h-12 !text-base"
+                />
+              </Field>
+
+              <Field label="Weight" hint="For AI health guidance">
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    placeholder="e.g. 70"
+                    data-testid="profile-weight"
+                    className="!h-12 !text-base min-w-0 flex-1"
+                  />
+                  <div className="flex h-12 items-center rounded-2xl border border-slate-300/70 bg-slate-200/50 p-1 dark:border-white/10 dark:bg-white/5">
+                    <button
+                      type="button"
+                      onClick={() => setWeightUnit('kg')}
+                      className={`h-full rounded-xl px-2.5 text-xs font-bold transition-all ${
+                        weightUnit === 'kg' ? 'bg-white text-brand-700 shadow-sm dark:bg-white/20 dark:text-white' : 'text-slate-500'
+                      }`}
+                    >
+                      kg
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWeightUnit('lbs')}
+                      className={`h-full rounded-xl px-2.5 text-xs font-bold transition-all ${
+                        weightUnit === 'lbs' ? 'bg-white text-brand-700 shadow-sm dark:bg-white/20 dark:text-white' : 'text-slate-500'
+                      }`}
+                    >
+                      lbs
+                    </button>
+                  </div>
+                </div>
+              </Field>
+            </div>
+
+            <Field label="Avatar Emoji">
+              <div className="flex flex-wrap gap-2">
+                {['🧓', '👵', '👴', '🧑', '👩', '👨', '👶', '🐕'].map((e) => (
+                  <button
+                    key={e}
+                    type="button"
+                    onClick={() => setEmoji(e)}
+                    className={`flex size-11 cursor-pointer items-center justify-center rounded-2xl text-2xl transition-transform active:scale-95 ${
+                      emoji === e ? 'bg-brand-500/20 ring-2 ring-brand-500' : 'bg-slate-200/60 dark:bg-white/8'
+                    }`}
+                  >
+                    {e}
+                  </button>
                 ))}
               </div>
             </Field>
-            <Field label="Color">
-              <div className="flex gap-1.5">
+
+            <Field label="Profile Color Tag">
+              <div className="flex items-center gap-2 pt-1">
                 {['#07c5a8', '#8b5cf6', '#f59e0b', '#f43f5e', '#0ea5e9'].map((c) => (
-                  <button key={c} onClick={() => setColor(c)} className={`size-9 cursor-pointer rounded-xl ${color === c ? 'ring-2 ring-slate-500 ring-offset-2 ring-offset-transparent' : ''}`} style={{ background: c }} />
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setColor(c)}
+                    className={`size-9 cursor-pointer rounded-2xl transition-transform hover:scale-110 ${
+                      color === c ? 'ring-2 ring-slate-600 ring-offset-2 ring-offset-transparent scale-110' : ''
+                    }`}
+                    style={{ background: c }}
+                  />
                 ))}
               </div>
             </Field>
           </div>
-          <Button className="w-full" onClick={() => void add()} disabled={!name.trim()}>Create profile</Button>
+
+          <Button className="w-full" size="lg" onClick={() => void save()} disabled={!name.trim()} data-testid="save-profile">
+            {editingProfile ? 'Save Changes' : 'Create Profile'}
+          </Button>
         </div>
       </Dialog>
     </Card>
