@@ -11,6 +11,8 @@
  * Nothing is ever sent anywhere except the AI provider the user configured.
  */
 
+import { db, getSettings, saveSettings } from './db'
+
 const te = new TextEncoder()
 const td = new TextDecoder()
 
@@ -31,7 +33,6 @@ function b64ToBytes(b64: string): Uint8Array {
 }
 
 async function getDeviceKey(): Promise<CryptoKey> {
-  const { db } = await import('./db')
   const existing = await db.kv.get(DEVICE_KEY_ID)
   if (existing?.value) {
     return crypto.subtle.importKey('jwk', existing.value as JsonWebKey, { name: 'AES-GCM' }, true, [
@@ -87,7 +88,6 @@ let sessionKey: CryptoKey | null = null
 
 /** The key currently usable for encrypt/decrypt of secrets. */
 export async function activeKey(): Promise<CryptoKey> {
-  const { getSettings, db } = await import('./db')
   const settings = await getSettings()
   if (settings.lockEnabled) {
     if (!sessionKey) throw new Error('LOCKED')
@@ -101,14 +101,12 @@ export function lockNow(): void {
 }
 
 export async function isLocked(): Promise<boolean> {
-  const { getSettings } = await import('./db')
   const s = await getSettings()
   return s.lockEnabled && !sessionKey
 }
 
 /** Enable passcode lock: re-encrypt every stored secret under the new key. */
 export async function enablePasscodeLock(passcode: string): Promise<void> {
-  const { db, saveSettings } = await import('./db')
   const salt = crypto.getRandomValues(new Uint8Array(16))
   const passKey = await derivePasscodeKey(passcode, salt)
   const deviceKey = await getDeviceKey()
@@ -129,7 +127,6 @@ export async function enablePasscodeLock(passcode: string): Promise<void> {
 
 /** Verify a passcode and unlock the session. */
 export async function unlockWithPasscode(passcode: string): Promise<boolean> {
-  const { db } = await import('./db')
   const row = await db.kv.get(PASS_CHECK)
   if (!row?.value) return false
   const { salt, check } = row.value as { salt: string; check: string }
@@ -147,7 +144,6 @@ export async function unlockWithPasscode(passcode: string): Promise<boolean> {
 /** Disable passcode lock: re-encrypt secrets back under the device key. */
 export async function disablePasscodeLock(passcode: string): Promise<boolean> {
   if (!(await unlockWithPasscode(passcode))) return false
-  const { db, saveSettings } = await import('./db')
   const passKey = sessionKey!
   const deviceKey = await getDeviceKey()
   const secrets = await db.kv.where('key').startsWith('secret.').toArray()
