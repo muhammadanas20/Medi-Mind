@@ -102,3 +102,5 @@ Family caregiver sync · voice reminders · watch integration · barcode scannin
 
 MediMind is an organizational tool. It does not provide medical advice, diagnosis, or treatment.
 Always verify medication details with your doctor or pharmacist.
+
+ `Built by Muhammad Anas`
