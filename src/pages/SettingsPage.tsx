@@ -357,7 +357,11 @@ function RemindersSection() {
                 const p = await requestNotificationPermission()
                 setPerm(p)
                 if (p === 'granted') await enableBackgroundSync()
-                showToast(p === 'granted' ? 'Notifications enabled 🔔' : 'Permission denied by browser', p === 'granted' ? 'success' : 'error')
+                showToast(
+                  p === 'granted' ? 'Dose alerts are now enabled' : 'Notifications were blocked by the browser',
+                  p === 'granted' ? 'success' : 'error',
+                  p === 'granted' ? 'Notifications on' : 'Permission denied',
+                )
               }}
             >
               <BellRing /> Enable notifications
@@ -373,7 +377,11 @@ function RemindersSection() {
               variant="outline"
               onClick={async () => {
                 const ok = await sendTestNotification(true)
-                showToast(ok ? 'Test alert sent — check your notification shade' : 'Could not send a test alert', ok ? 'success' : 'error')
+                showToast(
+                  ok ? 'Check your notification shade' : 'Could not send a test alert',
+                  ok ? 'success' : 'error',
+                  ok ? 'Test alert sent' : 'Test alert failed',
+                )
               }}
             >
               <Bell /> Send test alert

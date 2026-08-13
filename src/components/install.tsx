@@ -19,9 +19,9 @@ function useInstallAction(openHelp: () => void) {
     }
     const outcome = await promptAppInstall()
     if (outcome === 'accepted') {
-      showToast('MediMind is being added to your home screen', 'success')
+      showToast('MediMind is being added to your home screen', 'success', 'Installing app')
     } else if (outcome === 'dismissed') {
-      showToast('Installation cancelled — you can try again in Settings')
+      showToast('You can try again from Settings', 'info', 'Installation cancelled')
     }
   }
 

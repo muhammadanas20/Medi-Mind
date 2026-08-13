@@ -3,6 +3,11 @@ import type { AppSettings } from '../lib/types'
 import { DEFAULT_SETTINGS } from '../lib/db'
 import type { DoseInstance } from '../lib/reminders'
 
+export type ToastKind = 'info' | 'success' | 'error'
+
+/** How long a toast stays on screen — mirrored by the toast's progress bar. */
+export const TOAST_DURATION_MS = 4000
+
 interface UiState {
   hydrated: boolean
   settings: AppSettings
@@ -22,8 +27,9 @@ interface UiState {
   showLockScreen: boolean
   setShowLockScreen: (v: boolean) => void
 
-  toast: { id: number; message: string; kind: 'info' | 'success' | 'error' } | null
-  showToast: (message: string, kind?: 'info' | 'success' | 'error') => void
+  toast: { id: number; title?: string; message: string; kind: ToastKind } | null
+  showToast: (message: string, kind?: ToastKind, title?: string) => void
+  dismissToast: () => void
 }
 
 let toastTimer: ReturnType<typeof setTimeout> | null = null
@@ -56,10 +62,14 @@ export const useUiStore = create<UiState>((set) => ({
   setLocked: (locked) => set({ locked, showLockScreen: locked }),
 
   toast: null,
-  showToast: (message, kind = 'info') => {
+  showToast: (message, kind = 'info', title) => {
     if (toastTimer) clearTimeout(toastTimer)
-    set({ toast: { id: Date.now(), message, kind } })
-    toastTimer = setTimeout(() => set({ toast: null }), 3200)
+    set({ toast: { id: Date.now(), title, message, kind } })
+    toastTimer = setTimeout(() => set({ toast: null }), TOAST_DURATION_MS)
+  },
+  dismissToast: () => {
+    if (toastTimer) clearTimeout(toastTimer)
+    set({ toast: null })
   },
 }))
 

@@ -91,7 +91,7 @@ export function DoseRow({
               className="px-3 sm:px-3.5"
               onClick={async () => {
                 await markTaken(log.id)
-                showToast(`${instance.medicationName} marked as taken`, 'success')
+                showToast(`${instance.medicationName} marked as taken`, 'success', 'Dose taken')
               }}
               data-testid="dose-taken"
             >
@@ -108,7 +108,7 @@ export function DoseRow({
               aria-label="Skip"
               onClick={async () => {
                 await markSkipped(log.id)
-                showToast(`${instance.medicationName} skipped`)
+                showToast(`${instance.medicationName} skipped`, 'info', 'Dose skipped')
               }}
             >
               <X />
@@ -130,7 +130,7 @@ export function DoseRow({
                       onClick={async () => {
                         await snooze(log.id, m)
                         setSnoozeOpen(false)
-                        showToast(`Snoozed for ${m} min`)
+                        showToast(`Snoozed for ${m} min`, 'info', 'Reminder snoozed')
                       }}
                     >
                       {m}m
@@ -170,10 +170,10 @@ export function DueStack() {
     if (!current) return
     if (action === 'taken') {
       await markTaken(current.logId)
-      showToast(`✅ ${current.medicationName} taken — great job!`, 'success')
+      showToast(`${current.medicationName} marked as taken`, 'success', 'Dose taken')
     } else {
       await markSkipped(current.logId)
-      showToast(`${current.medicationName} skipped`)
+      showToast(`${current.medicationName} skipped`, 'info', 'Dose skipped')
     }
     dismissDue(current.logId)
     setSnoozeFor(null)
@@ -228,7 +228,7 @@ export function DueStack() {
                     variant="outline"
                     onClick={async () => {
                       await snooze(current.logId, m)
-                      showToast(`Snoozed ${m} minutes ⏰`)
+                      showToast(`Snoozed for ${m} minutes`, 'info', 'Reminder snoozed')
                       dismissDue(current.logId)
                       setSnoozeFor(null)
                     }}
