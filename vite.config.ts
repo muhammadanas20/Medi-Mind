@@ -4,9 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  // '/Medical-AI/' when deployed to GitHub Pages (set in the deploy workflow),
-  // '/' everywhere else (local dev, Netlify/Vercel/self-host at domain root)
-  base: process.env.VITE_BASE ?? '/',
+  // Dynamically uses VITE_BASE if passed by CI, or falls back to your GH Pages repo path '/Medi-Mind/'
+  base: process.env.VITE_BASE ?? '/Medi-Mind/',
   plugins: [
     react(),
     tailwindcss(),
@@ -37,7 +36,6 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        // Tesseract language data + wasm — cache-first so OCR works offline after first use
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/tesseract\.js/,
@@ -58,7 +56,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // long-lived vendor caches — app code ships in a small entry chunk
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-anim': ['framer-motion'],
           'vendor-data': ['dexie', 'dexie-react-hooks', '@tanstack/react-query', 'zustand', 'zod'],
