@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Activity, CalendarClock, ChartNoAxesColumn, CheckCircle2, HeartPulse,
@@ -54,6 +54,32 @@ const ROUTE_TITLES: Record<string, string> = {
   '/settings': 'Settings',
 }
 const BASE_TITLE = 'MediMind — AI Medication Manager'
+const LG_MEDIA_QUERY = '(min-width: 1024px)'
+
+function navTestId(label: string) {
+  return `nav-${label.toLowerCase().replace(/\s+/g, '-')}`
+}
+
+function useMediaQuery(query: string) {
+  const getMatches = () =>
+    typeof window !== 'undefined' && 'matchMedia' in window
+      ? window.matchMedia(query).matches
+      : false
+  const [matches, setMatches] = useState(getMatches)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('matchMedia' in window)) return undefined
+
+    const media = window.matchMedia(query)
+    const updateMatches = () => setMatches(media.matches)
+
+    updateMatches()
+    media.addEventListener('change', updateMatches)
+    return () => media.removeEventListener('change', updateMatches)
+  }, [query])
+
+  return matches
+}
 
 function LazyPage({ children }: { children: ReactNode }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>
@@ -79,6 +105,9 @@ export function AppShell() {
   const profiles = useProfiles()
   const active = useActiveProfile()
   const setActive = useSetActiveProfile()
+  // Both navs stay mounted for CSS breakpoints, so expose the shared nav-* test
+  // ids only on the currently visible nav to keep Playwright strict locators unique.
+  const isDesktopNav = useMediaQuery(LG_MEDIA_QUERY)
 
   // With hash routing the browser never scrolls back to the top on its own, so
   // a long page (Settings, Insights…) keeps the previous page's scroll offset
@@ -100,7 +129,7 @@ export function AppShell() {
               to={n.to}
               end={n.end}
               title={n.label}
-              data-testid={`nav-${n.label.toLowerCase().replace(' ', '-')}`}
+              data-testid={isDesktopNav ? navTestId(n.label) : undefined}
               className={({ isActive }) =>
                 cn(
                   'flex size-12 items-center justify-center rounded-2xl transition-all duration-200',
@@ -203,7 +232,13 @@ export function AppShell() {
       <nav className="glass-strong fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-md items-end justify-around rounded-[26px] px-1.5 py-2 sm:px-2 lg:hidden">
         {MOBILE_NAV.map((n) =>
           n.fab ? (
-            <NavLink key={n.to} to={n.to} aria-label={n.label} data-testid="nav-scan" className="flex">
+            <NavLink
+              key={n.to}
+              to={n.to}
+              aria-label={n.label}
+              data-testid={!isDesktopNav ? navTestId(n.label) : undefined}
+              className="flex"
+            >
               {({ isActive }) => (
                 <motion.div
                   whileTap={{ scale: 0.9 }}
@@ -222,7 +257,7 @@ export function AppShell() {
               to={n.to}
               end={n.end}
               aria-label={n.label}
-              data-testid={`nav-${n.label.toLowerCase().replace(' ', '-')}`}
+              data-testid={!isDesktopNav ? navTestId(n.label) : undefined}
               className={({ isActive }) =>
                 cn(
                   'flex min-w-0 flex-col items-center gap-1 whitespace-nowrap rounded-2xl px-2.5 py-2 text-[10px] font-semibold transition-colors sm:px-3',
