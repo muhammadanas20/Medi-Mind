@@ -1,12 +1,12 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Activity, ArrowLeft, ArrowRight, BadgeCheck, BrainCircuit, CalendarDays, CircleAlert,
-  FlaskConical, Loader2, PenLine, ScanLine, Search, ShieldCheck, Sparkles, Stethoscope, Trash2,
+  FlaskConical, PenLine, ScanLine, Search, ShieldCheck, Stethoscope, Trash2,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CameraCapture } from '../components/camera'
-import { Badge, Button, Card, Field, Input, Select, Textarea } from '../components/ui'
+import { AIScanLoader, Badge, Button, Card, Field, Input, Select, Textarea } from '../components/ui'
 import { extractPrescription } from '../ai/service'
 import { parseDurationDays, foodFromText } from '../ai/extract'
 import { db, todayStr, uid } from '../lib/db'
@@ -214,14 +214,8 @@ export function ScanPage() {
               {imageUrl && (
                 <img src={imageUrl} alt="Prescription" className="max-h-56 rounded-2xl border border-white/10 object-contain" />
               )}
-              <div className="relative">
-                <div className="flex size-16 items-center justify-center rounded-3xl bg-gradient-to-br from-brand-500 to-accent-600 text-white shadow-xl">
-                  <Sparkles className="size-7 animate-pulse" />
-                </div>
-                <Loader2 className="absolute -right-2 -top-2 size-6 animate-spin text-brand-500" />
-              </div>
-              <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">{progress}</p>
-              <p className="-mt-2 max-w-80 text-center text-xs text-slate-400">
+              <AIScanLoader progress={progress} />
+              <p className="max-w-80 text-center text-xs text-slate-400">
                 The AI is only reading the document. Nothing becomes a reminder until you confirm it.
               </p>
             </Card>

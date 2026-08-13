@@ -1,10 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { BrainCircuit, Camera, CircleHelp, Loader2, RotateCcw, SearchCheck, ShieldAlert, Sparkles } from 'lucide-react'
+import { BrainCircuit, Camera, CircleHelp, RotateCcw, SearchCheck, ShieldAlert, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { observePill } from '../ai/service'
 import { normalizePillColor, normalizePillShape } from '../ai/extract'
 import { CameraCapture } from '../components/camera'
-import { Badge, Button, Card, Field, Input, Select } from '../components/ui'
+import { AIScanLoader, Badge, Button, Card, Field, Input, Select } from '../components/ui'
 import { db, uid } from '../lib/db'
 import { prepareForAI, prepareForOCR, sampleDominantColor, type SampledColor } from '../lib/image'
 import { extractImprintCandidates, runOCR } from '../lib/ocr'
@@ -144,8 +144,7 @@ export function PillIdPage() {
           <motion.div key="an" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <Card className="flex flex-col items-center gap-4 py-10">
               {imageUrl && <img src={imageUrl} alt="Pill" className="max-h-52 rounded-2xl object-contain" />}
-              <Loader2 className="size-6 animate-spin text-brand-500" />
-              <p className="text-sm font-semibold">{progress}</p>
+              <AIScanLoader progress={progress} />
             </Card>
           </motion.div>
         )}

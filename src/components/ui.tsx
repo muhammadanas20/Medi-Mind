@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { X } from 'lucide-react'
+import { BrainCircuit, X } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import {
   createContext,
@@ -358,3 +358,114 @@ export function ToneDot({ tone, className }: { tone: 'brand' | 'warn' | 'danger'
   )
 }
 void toneToBadge
+
+/* ------------------------------ Modern Loaders ---------------------------- */
+
+/**
+ * DotsLoader — modern animated bouncing dots used for AI scanning and loading
+ * states across the app.
+ *
+ * Variants:
+ * - `sm`  → inline / button loaders (tiny dots)
+ * - `md`  → card-level loaders (medium dots)
+ * - `lg`  → full-screen / prominent scanners (large dots with orbit ring)
+ */
+export function DotsLoader({
+  size = 'md',
+  label,
+  className,
+}: {
+  size?: 'sm' | 'md' | 'lg'
+  label?: string
+  className?: string
+}) {
+  const sizes = {
+    sm: { dot: 'size-1.5', gap: 'gap-1' },
+    md: { dot: 'size-2', gap: 'gap-1.5' },
+    lg: { dot: 'size-2.5', gap: 'gap-2' },
+  }[size]
+
+  return (
+    <div
+      className={cn('inline-flex items-center', sizes.gap, className)}
+      role="status"
+      aria-label={label ?? 'Loading'}
+    >
+      <span
+        className={cn(
+          sizes.dot,
+          'rounded-full bg-gradient-to-br from-brand-400 to-brand-600',
+          'animate-[dots-bounce_1.4s_ease-in-out_infinite_both]',
+        )}
+      />
+      <span
+        className={cn(
+          sizes.dot,
+          'rounded-full bg-gradient-to-br from-brand-500 to-accent-500',
+          'animate-[dots-bounce_1.4s_ease-in-out_0.16s_infinite_both]',
+        )}
+      />
+      <span
+        className={cn(
+          sizes.dot,
+          'rounded-full bg-gradient-to-br from-accent-500 to-accent-600',
+          'animate-[dots-bounce_1.4s_ease-in-out_0.32s_infinite_both]',
+        )}
+      />
+      {label && (
+        <span className="ml-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+          {label}
+        </span>
+      )}
+    </div>
+  )
+}
+
+/**
+ * AIScanLoader — the hero "AI is scanning" loader.
+ *
+ * A glowing gradient orb with orbiting dots, a subtle pulse ring, and a
+ * brain-circuit icon in the centre. Designed for the full-card processing
+ * screens on ScanPage, HealthPage, and PillIdPage.
+ */
+export function AIScanLoader({ progress }: { progress?: string }) {
+  return (
+    <div className="flex flex-col items-center gap-5 py-2">
+      {/* Ambient glow behind the orb */}
+      <div className="relative">
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-brand-400 via-accent-500 to-brand-500 opacity-60 blur-2xl animate-[scan-glow_2.6s_ease-in-out_infinite]" />
+
+        {/* Orbit ring */}
+        <div className="relative size-20 animate-[orbit-spin_1.8s_linear_infinite]">
+          <span className="absolute left-1/2 top-0 size-2 -translate-x-1/2 rounded-full bg-brand-400 shadow-[0_0_10px_2px_rgba(32,225,193,0.8)]" />
+          <span className="absolute right-0 top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-accent-400 shadow-[0_0_8px_2px_rgba(167,139,250,0.7)]" />
+          <span className="absolute bottom-0 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-brand-500 shadow-[0_0_8px_2px_rgba(7,197,168,0.7)]" />
+        </div>
+
+        {/* Center icon */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-accent-600 text-white shadow-xl shadow-brand-500/30">
+            <BrainCircuit className="size-6 animate-pulse" />
+          </div>
+        </div>
+      </div>
+
+      {/* Bouncing dots below the orb */}
+      <div className="flex items-center gap-1.5 pt-1">
+        {[0, 1, 2, 3].map((i) => (
+          <span
+            key={i}
+            className="size-1.5 rounded-full bg-brand-500"
+            style={{
+              animation: `dot-fade 1.4s ease-in-out ${i * 0.2}s infinite both`,
+            }}
+          />
+        ))}
+      </div>
+
+      {progress && (
+        <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">{progress}</p>
+      )}
+    </div>
+  )
+}

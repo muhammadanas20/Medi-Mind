@@ -9,7 +9,7 @@ import { cn } from '../lib/utils'
 import { TOAST_DURATION_MS, useUiStore, type ToastKind } from '../state/ui'
 import { usePatchSettings, useProfiles, useSetActiveProfile, useActiveProfile } from '../state/hooks'
 import { InstallAppBanner } from './install'
-import { Button } from './ui'
+import { Button, DotsLoader } from './ui'
 import { ErrorBoundary } from './ErrorBoundary'
 import { TodayPage } from '../pages/TodayPage'
 
@@ -95,9 +95,9 @@ function LazyPage({ children }: { children: ReactNode }) {
 function PageLoader() {
   return (
     <div className="flex min-h-64 items-center justify-center" role="status" aria-label="Loading page">
-      <div className="flex items-center gap-3 rounded-2xl bg-white/50 px-4 py-3 text-sm font-semibold text-slate-500 dark:bg-white/5 dark:text-slate-400">
-        <span className="size-4 animate-spin rounded-full border-2 border-brand-500/25 border-t-brand-500" />
-        Loading…
+      <div className="flex flex-col items-center gap-3 rounded-2xl bg-white/50 px-6 py-4 dark:bg-white/5">
+        <DotsLoader size="md" />
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Loading…</p>
       </div>
     </div>
   )
