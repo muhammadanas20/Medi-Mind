@@ -5,6 +5,7 @@ import {
   Loader2, Lock, LockOpen, Moon, Plus, Sun, TestTubeDiagonal, Trash2, Type, Upload, UserPlus, Users, Vibrate, Waves,
 } from 'lucide-react'
 import { useRef, useState } from 'react'
+import { InstallAppSection } from '../components/install'
 import { Badge, Button, Card, Dialog, Field, Input, SectionTitle, Select, Switch } from '../components/ui'
 import { disablePasscodeLock, enablePasscodeLock } from '../lib/crypto'
 import {
@@ -30,6 +31,7 @@ export function SettingsPage() {
           Everything is stored locally on this device. AI keys are encrypted at rest.
         </p>
       </div>
+      <InstallAppSection />
       <ProfilesSection />
       <AiSection />
       <RemindersSection />

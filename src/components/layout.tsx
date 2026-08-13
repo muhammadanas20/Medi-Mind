@@ -7,6 +7,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '../lib/utils'
 import { useUiStore } from '../state/ui'
 import { usePatchSettings, useProfiles, useSetActiveProfile, useActiveProfile } from '../state/hooks'
+import { InstallAppBanner } from './install'
 import { Button } from './ui'
 
 const NAV = [
@@ -57,7 +58,7 @@ export function AppShell() {
       </aside>
 
       {/* ------------------------------- main ------------------------------- */}
-      <div className="flex min-w-0 flex-1 flex-col px-4 pb-28 pt-4 sm:px-6 lg:pb-10">
+      <div className="flex min-w-0 flex-1 flex-col px-4 pb-28 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:pb-10 lg:pt-4">
         <header className="mb-5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 lg:hidden">
             <Brand compact />
@@ -94,6 +95,8 @@ export function AppShell() {
             </div>
           </div>
         </header>
+
+        <InstallAppBanner />
 
         <main className="min-w-0 flex-1">
           <AnimatePresence mode="wait">
