@@ -26,6 +26,7 @@ export default function App() {
   const hydrated = useBootstrap()
   const settings = useUiStore((s) => s.settings)
   const locked = useUiStore((s) => s.locked)
+  const showLockScreen = useUiStore((s) => s.showLockScreen)
   const setLocked = useUiStore((s) => s.setLocked)
   const [onboarded, setOnboarded] = useState(false)
 

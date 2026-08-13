@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Activity, CalendarClock, ChartNoAxesColumn, CheckCircle2, HeartPulse,
-  Info, Moon, Pill, ScanLine, Search, Settings2, Sun, TriangleAlert,
+  Info, LockKeyhole, Moon, Pill, ScanLine, Search, Settings2, Sun, TriangleAlert,
 } from 'lucide-react'
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '../lib/utils'
@@ -100,6 +100,8 @@ export function AppShell() {
   const settings = useUiStore((s) => s.settings)
   const patch = usePatchSettings()
   const toast = useUiStore((s) => s.toast)
+  const locked = useUiStore((s) => s.locked)
+  const setShowLockScreen = useUiStore((s) => s.setShowLockScreen)
   const location = useLocation()
   const navigate = useNavigate()
   const profiles = useProfiles()
@@ -118,11 +120,11 @@ export function AppShell() {
   }, [location.pathname])
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-7xl">
+    <div className="mx-auto flex min-h-dvh w-full max-w-7xl lg:gap-3 lg:px-3 lg:py-3">
       {/* ------------------------- desktop side rail ------------------------ */}
-      <aside className="sticky top-0 hidden h-dvh w-20 flex-col items-center gap-2 py-6 lg:flex">
+      <aside className="glass sticky top-3 hidden h-[calc(100dvh-1.5rem)] w-56 shrink-0 flex-col gap-1 self-start overflow-hidden rounded-3xl px-3 py-5 lg:flex">
         <Brand />
-        <nav className="mt-6 flex flex-1 flex-col gap-1.5">
+        <nav className="mt-5 flex flex-1 flex-col gap-1">
           {DESKTOP_NAV.map((n) => (
             <NavLink
               key={n.to}
@@ -132,30 +134,30 @@ export function AppShell() {
               data-testid={isDesktopNav ? navTestId(n.label) : undefined}
               className={({ isActive }) =>
                 cn(
-                  'flex size-12 items-center justify-center rounded-2xl transition-all duration-200',
+                  'flex h-11 items-center gap-3 rounded-2xl px-3 text-sm font-semibold transition-all duration-200',
                   isActive
-                    ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/30'
+                    ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/25'
                     : 'text-slate-500 hover:bg-white/60 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/8 dark:hover:text-slate-200',
                 )
               }
             >
-              <n.icon className="size-5" strokeWidth={2.2} />
+              <n.icon className="size-5 shrink-0" strokeWidth={2.2} />
+              <span className="truncate">{n.label}</span>
             </NavLink>
           ))}
         </nav>
-        <ThemeButton />
+        <ThemeButton settingsTheme={settings.theme} onToggle={(theme) => void patch({ theme })} labeled />
       </aside>
 
       {/* ------------------------------- main ------------------------------- */}
-      <div className="flex min-w-0 flex-1 flex-col px-4 pb-28 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:pb-10 lg:pt-4">
-        <header className="mb-5 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-          <div className="flex items-center gap-3 lg:hidden">
+      <div className="flex min-w-0 flex-1 flex-col px-4 pb-28 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:px-6 lg:pb-6 lg:pt-2">
+        <header className="mb-5 flex items-center gap-3">
+          <div className="min-w-0 shrink lg:hidden">
             <Brand compact />
           </div>
-          {/* profile switcher */}
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex min-w-0 items-center gap-2">
             {profiles && profiles.length > 1 && active && (
-              <div className="glass no-scrollbar flex max-w-[52vw] items-center gap-1 overflow-x-auto rounded-2xl p-1 sm:max-w-none">
+              <div className="glass no-scrollbar flex max-w-[46vw] items-center gap-1 overflow-x-auto rounded-2xl p-1 sm:max-w-none">
                 {profiles.map((p) => (
                   <button
                     key={p.id}
@@ -168,7 +170,7 @@ export function AppShell() {
                     )}
                   >
                     <span
-                      className="size-2.5 rounded-full"
+                      className="size-2.5 shrink-0 rounded-full"
                       style={{ backgroundColor: p.color }}
                     />
                     <span className="max-w-16 truncate">{p.avatarEmoji ?? p.name.split(' ')[0]}</span>
@@ -176,11 +178,22 @@ export function AppShell() {
                 ))}
               </div>
             )}
+            {locked && (
+              <Button
+                variant="glass"
+                size="icon"
+                aria-label="Unlock AI features"
+                title="AI features are locked"
+                onClick={() => setShowLockScreen(true)}
+              >
+                <LockKeyhole className="size-4" />
+              </Button>
+            )}
             <Button variant="glass" size="icon" onClick={() => navigate('/settings')} aria-label="Settings" data-testid="open-settings">
               <Settings2 className="size-4" />
             </Button>
             <div className="lg:hidden">
-              <ThemeButton />
+              <ThemeButton settingsTheme={settings.theme} onToggle={(theme) => void patch({ theme })} />
             </div>
           </div>
         </header>
@@ -219,10 +232,10 @@ export function AppShell() {
           </ErrorBoundary>
         </main>
 
-        <footer className="mt-10 hidden items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500 lg:flex">
-          <HeartPulse className="size-3.5" />
-          MediMind organizes your schedule — it never replaces medical advice. Always confirm AI-extracted data.
-          <span className="ml-auto inline-flex items-center gap-1">
+        <footer className="mt-10 hidden flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-400 dark:text-slate-500 lg:flex">
+          <HeartPulse className="size-3.5 shrink-0" />
+          <span>MediMind organizes your schedule — it never replaces medical advice. Always confirm AI-extracted data.</span>
+          <span className="inline-flex items-center gap-1 lg:ml-auto">
             <ShieldDot /> 100% local storage · your keys never leave this device
           </span>
         </footer>
@@ -291,44 +304,58 @@ export function AppShell() {
       </AnimatePresence>
     </div>
   )
+}
 
-  function ThemeButton() {
-    const dark =
-      settings.theme === 'dark' ||
-      (settings.theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+function ThemeButton({
+  settingsTheme,
+  onToggle,
+  labeled,
+}: {
+  settingsTheme: 'system' | 'light' | 'dark'
+  onToggle: (theme: 'light' | 'dark') => void
+  labeled?: boolean
+}) {
+  const dark =
+    settingsTheme === 'dark' ||
+    (settingsTheme === 'system' && typeof window !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches)
+  if (labeled) {
     return (
-      <Button
-        variant="glass"
-        size="icon"
+      <button
+        type="button"
         aria-label="Toggle theme"
-        onClick={() => void patch({ theme: dark ? 'light' : 'dark' })}
+        onClick={() => onToggle(dark ? 'light' : 'dark')}
+        className="flex h-11 w-full cursor-pointer items-center gap-3 rounded-2xl px-3 text-sm font-semibold text-slate-500 transition-colors hover:bg-white/60 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/8 dark:hover:text-slate-200"
       >
-        {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-      </Button>
+        {dark ? <Sun className="size-5 shrink-0" /> : <Moon className="size-5 shrink-0" />}
+        <span>{dark ? 'Light mode' : 'Dark mode'}</span>
+      </button>
     )
   }
+  return (
+    <Button
+      variant="glass"
+      size="icon"
+      aria-label="Toggle theme"
+      onClick={() => onToggle(dark ? 'light' : 'dark')}
+    >
+      {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+    </Button>
+  )
 }
 
 function Brand({ compact }: { compact?: boolean }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className={cn('flex items-center gap-2.5', compact ? 'min-w-0' : 'px-1')}>
       <img
         src={`${import.meta.env.BASE_URL}icons/icon.svg`}
         alt=""
-        width={32}
-        height={32}
-        className="size-8 rounded-[9px] shadow-md shadow-brand-500/25 lg:size-9 lg:rounded-[10px]"
+        width={36}
+        height={36}
+        className="size-8 shrink-0 rounded-[9px] shadow-md shadow-brand-500/25 lg:size-9 lg:rounded-[10px]"
       />
-      {!compact && (
-        <span className="hidden text-lg font-extrabold tracking-tight lg:block">
-          Medi<span className="text-gradient">Mind</span>
-        </span>
-      )}
-      {compact && (
-        <span className="text-lg font-extrabold tracking-tight">
-          Medi<span className="text-gradient">Mind</span>
-        </span>
-      )}
+      <span className={cn('text-lg font-extrabold tracking-tight', compact && 'truncate')}>
+        Medi<span className="text-gradient">Mind</span>
+      </span>
     </div>
   )
 }
