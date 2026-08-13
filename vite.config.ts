@@ -19,7 +19,15 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icons/icon.svg', 'icons/apple-touch-icon.png'],
+      includeAssets: [
+        'icons/icon.svg',
+        'icons/apple-touch-icon.png',
+        'icons/splash-1080x1920.png',
+        'icons/splash-1170x2532.png',
+        'icons/splash-1284x2778.png',
+        'icons/splash-1290x2796.png',
+        'reminder-sw.js',
+      ],
       // Make the secure live preview installable too. In production the same
       // manifest and generated service worker are registered automatically.
       devOptions: { enabled: true, type: 'module', suppressWarnings: true },
@@ -74,6 +82,13 @@ export default defineConfig({
             url: './#/meds',
             icons: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
           },
+          {
+            name: 'Health log',
+            short_name: 'Health',
+            description: 'Track blood pressure, sugar and other readings',
+            url: './#/health',
+            icons: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+          },
         ],
       },
       workbox: {
@@ -82,6 +97,7 @@ export default defineConfig({
         clientsClaim: true,
         skipWaiting: true,
         navigateFallback: 'index.html',
+        importScripts: ['reminder-sw.js'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/tesseract\.js/,

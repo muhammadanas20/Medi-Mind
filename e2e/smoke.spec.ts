@@ -120,6 +120,37 @@ test('deep links load lazy routes directly (fresh page load) without blanking', 
   await expect(page.getByRole('heading', { level: 1, name: /today's plan/i })).toBeVisible()
 })
 
+test('health log: opt-in BP tracking and save a manual reading', async ({ page }) => {
+  await completeOnboarding(page)
+  await page.getByTestId('nav-health').click()
+  await expect(page.getByText(/turn on only what you need/i)).toBeVisible()
+
+  await page.getByTestId('enable-tracker-blood_pressure').click()
+  await expect(page.getByTestId('health-history')).toBeVisible()
+
+  await page.getByTestId('log-manual').click()
+  await page.getByTestId('vital-systolic').fill('128')
+  await page.getByTestId('vital-diastolic').fill('82')
+  await page.getByTestId('save-reading').click()
+  await expect(page.getByTestId('health-report')).toBeVisible()
+  await expect(page.getByText(/128\/82/).first()).toBeVisible()
+  await expect(page.getByText(/what you can do/i)).toBeVisible()
+})
+
+test('upload photo opens the file picker, not the camera', async ({ page }) => {
+  await completeOnboarding(page)
+  await page.getByTestId('nav-scan').first().click()
+  await expect(page.getByTestId('upload-photo')).toBeVisible()
+
+  const gallery = page.getByTestId('gallery-file-input')
+  await expect(gallery).toHaveAttribute('type', 'file')
+  await expect(gallery).not.toHaveAttribute('capture')
+  // specific types — not image/*, which some mobile browsers treat as "open camera"
+  const accept = await gallery.getAttribute('accept')
+  expect(accept ?? '').not.toMatch(/^image\/\*$/)
+  expect(accept ?? '').toMatch(/jpe?g/i)
+})
+
 test('navigation resets scroll position and updates the document title', async ({ page }) => {
   await completeOnboarding(page)
 

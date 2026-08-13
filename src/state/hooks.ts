@@ -1,9 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useMemo } from 'react'
 import { db, getSettings, saveSettings, getActiveProfileId, setActiveProfileId, todayStr } from '../lib/db'
-import type { AppSettings, DoseLog, Medication, Profile, Slot } from '../lib/types'
+import type { AppSettings, DoseLog, HealthTracker, Medication, Profile, Slot, VitalKind, VitalReading } from '../lib/types'
 import { SLOTS } from '../lib/types'
 import { expandDoseInstances, type DoseInstance, isSnoozed } from '../lib/reminders'
+import { historyCutoff } from '../lib/vitals'
 import { applyTheme, useUiStore } from './ui'
 
 /* ------------------------------ bootstrap ------------------------------- */
@@ -189,5 +190,37 @@ export function useRecentLogs(profileId?: string, days = 7) {
       return logs.filter((l) => l.date >= cutoffStr)
     },
     [profileId, days, settings.reminderWindows],
+  )
+}
+
+/* ------------------------------ health vitals ---------------------------- */
+
+export function useHealthTrackers(profileId?: string): HealthTracker[] | undefined {
+  return useLiveQuery(
+    async () => {
+      if (!profileId) return []
+      const rows = await db.healthTrackers.where('profileId').equals(profileId).toArray()
+      return rows.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    },
+    [profileId],
+  )
+}
+
+export function useVitalReadings(
+  profileId?: string,
+  days = 90,
+  kind?: VitalKind,
+): VitalReading[] | undefined {
+  return useLiveQuery(
+    async () => {
+      if (!profileId) return []
+      const cut = historyCutoff(days)
+      let rows = await db.vitalReadings.where('profileId').equals(profileId).toArray()
+      if (kind) rows = rows.filter((r) => r.kind === kind)
+      return rows
+        .filter((r) => r.date >= cut)
+        .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))
+    },
+    [profileId, days, kind],
   )
 }

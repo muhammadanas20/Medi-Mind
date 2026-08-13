@@ -1,11 +1,15 @@
 import { z } from 'zod'
 import type {
+  BloodSugarContext,
   ExtractedMedicine,
   ExtractedPrescription,
+  ExtractedVital,
   FoodInstruction,
   PillColor,
   PillShape,
+  VitalKind,
 } from '../lib/types'
+import { sanitizeExtractedVital } from '../lib/vitals'
 
 /**
  * Prescription extraction — prompt + strict parsing.
@@ -172,5 +176,97 @@ export function normalizePillShape(shape: string): PillShape | undefined {
     [/square/, 'square'], [/triangle/, 'triangle'],
   ]
   for (const [re, v] of map) if (re.test(s)) return v
+  return undefined
+}
+
+/* --------------------------- device-reading assist -------------------------- */
+
+export const VITAL_PROMPT = `You are a medical-device display reader. The photo is a blood-pressure cuff, glucometer, pulse oximeter, scale, thermometer, or similar home monitor.
+
+RULES
+- Extract ONLY digits and labels visible on the screen. Never invent a reading.
+- If the display is unreadable, return {"kind": null} with a short confidenceNote.
+- Blood pressure: systolic AND diastolic (and pulse if shown). kind = "blood_pressure".
+- Glucose / sugar: kind = "blood_sugar". Prefer the unit printed on the device (mg/dL or mmol/L). context if a label shows fasting / before meal / after meal / random / bedtime.
+- Pulse-only: kind = "heart_rate", unit "bpm".
+- SpO2: kind = "spo2", unit "%".
+- Weight: kind = "weight", unit "kg" or "lb".
+- Temperature: kind = "temperature", unit "°C" or "°F".
+- Reply with JSON only, no markdown.
+
+JSON SHAPE
+{
+  "kind": "blood_pressure"|"blood_sugar"|"heart_rate"|"weight"|"spo2"|"temperature"|null,
+  "value": number?,
+  "systolic": number?,
+  "diastolic": number?,
+  "pulse": number?,
+  "unit": string?,
+  "context": string?,
+  "deviceBrand": string?,
+  "confidenceNote": string?,
+  "recordedAtHint": string?
+}`
+
+const optionalNum = z
+  .union([z.number(), z.string()])
+  .transform((v) => {
+    const n = typeof v === 'string' ? parseFloat(v.replace(',', '.')) : v
+    return Number.isFinite(n) ? n : undefined
+  })
+  .optional()
+  .catch(undefined)
+
+const vitalKindSchema = z
+  .enum(['blood_pressure', 'blood_sugar', 'heart_rate', 'weight', 'spo2', 'temperature'])
+  .optional()
+  .catch(undefined)
+
+export const extractedVitalSchema = z.object({
+  kind: z.union([vitalKindSchema, z.null()]).optional().transform((v) => v ?? undefined),
+  value: optionalNum,
+  systolic: optionalNum,
+  diastolic: optionalNum,
+  pulse: optionalNum,
+  unit: z.string().optional().catch(undefined),
+  context: z.string().optional().catch(undefined),
+  deviceBrand: z.string().optional().catch(undefined),
+  confidenceNote: z.string().optional().catch(undefined),
+  recordedAtHint: z.string().optional().catch(undefined),
+})
+
+export function parseVitalExtraction(rawText: string): ExtractedVital {
+  const json = extractJsonBlock(rawText)
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(json)
+  } catch {
+    throw new Error('AI returned invalid JSON — please enter the reading manually')
+  }
+  const result = extractedVitalSchema.safeParse(parsed)
+  if (!result.success) throw new Error('AI response did not match the device-reading schema')
+  return sanitizeExtractedVital(result.data)
+}
+
+export function coerceSugarContext(raw?: string): BloodSugarContext | undefined {
+  if (!raw) return undefined
+  const s = raw.toLowerCase()
+  if (/fast/.test(s)) return 'fasting'
+  if (/before|pre/.test(s)) return 'before_meal'
+  if (/after|post/.test(s)) return 'after_meal'
+  if (/bed/.test(s)) return 'bedtime'
+  if (/random/.test(s)) return 'random'
+  return undefined
+}
+
+export function asVitalKind(raw?: string): VitalKind | undefined {
+  if (!raw) return undefined
+  const s = raw.toLowerCase().replace(/\s+/g, '_')
+  if (s === 'blood_pressure' || s === 'bp') return 'blood_pressure'
+  if (s === 'blood_sugar' || s === 'glucose' || s === 'sugar') return 'blood_sugar'
+  if (s === 'heart_rate' || s === 'pulse') return 'heart_rate'
+  if (s === 'weight') return 'weight'
+  if (s === 'spo2' || s === 'oxygen') return 'spo2'
+  if (s === 'temperature' || s === 'temp') return 'temperature'
   return undefined
 }

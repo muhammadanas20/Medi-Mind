@@ -1,16 +1,21 @@
 import { motion } from 'framer-motion'
-import { Flame, History, TrendingUp } from 'lucide-react'
+import { Activity, Flame, History, TrendingUp } from 'lucide-react'
 import { useMemo } from 'react'
-import { MedicationBars, WeeklyBars } from '../components/charts'
+import { Link } from 'react-router-dom'
+import { MedicationBars, Sparkline, WeeklyBars } from '../components/charts'
 import { Badge, Card, Ring, SectionTitle } from '../components/ui'
 import { todayStr } from '../lib/db'
 import { adherenceSeries, overallAdherence, SLOT_META } from '../lib/reminders'
 import { formatTime } from '../lib/reminders'
-import { useActiveProfile, useRecentLogs } from '../state/hooks'
+import { classifyReading, formatReading, sparkValues, VITAL_META } from '../lib/vitals'
+import { useActiveProfile, useHealthTrackers, useRecentLogs, useVitalReadings } from '../state/hooks'
 
 export function InsightsPage() {
   const profile = useActiveProfile()
   const logs = useRecentLogs(profile?.id, 7)
+  const trackers = useHealthTrackers(profile?.id)
+  const vitals = useVitalReadings(profile?.id, 90)
+  const enabledVitals = (trackers ?? []).filter((t) => t.enabled)
 
   const week = useMemo(() => (logs ? adherenceSeries(logs, todayStr(), 7) : []), [logs])
   const overall = useMemo(() => (logs ? overallAdherence(logs, todayStr(), 7) : null), [logs])
@@ -97,6 +102,40 @@ export function InsightsPage() {
           </Card>
         </motion.div>
       </div>
+
+      {enabledVitals.length > 0 && (
+        <Card>
+          <SectionTitle right={
+            <Link to="/health" className="text-xs font-semibold text-brand-600 dark:text-brand-300">
+              Open health log →
+            </Link>
+          }>
+            <span className="inline-flex items-center gap-2"><Activity className="size-5" /> 3-month vitals</span>
+          </SectionTitle>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {enabledVitals.map((t) => {
+              const rows = (vitals ?? []).filter((r) => r.kind === t.kind)
+              const latest = rows[0]
+              const cls = latest ? classifyReading(latest, t) : null
+              return (
+                <Link
+                  key={t.id}
+                  to="/health"
+                  className="flex items-center gap-3 rounded-2xl border border-slate-200/70 px-3 py-2.5 transition hover:bg-slate-200/40 dark:border-white/10 dark:hover:bg-white/[0.04]"
+                >
+                  <span className="text-xl">{VITAL_META[t.kind].emoji}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{VITAL_META[t.kind].label}</p>
+                    <p className="text-sm font-extrabold tabular-nums">{latest ? formatReading(latest) : 'No readings'}</p>
+                  </div>
+                  <Sparkline values={sparkValues(rows, t.kind, t.unit)} color={VITAL_META[t.kind].color} />
+                  {cls && <Badge tone={cls.tone}>{cls.label}</Badge>}
+                </Link>
+              )
+            })}
+          </div>
+        </Card>
+      )}
 
       <Card>
         <SectionTitle>

@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/muhammadanas20/Medi-Mind/actions/workflows/ci.yml/badge.svg)](https://github.com/muhammadanas20/Medi-Mind/actions/workflows/ci.yml)
 [![Deploy](https://github.com/muhammadanas20/Medi-Mind/actions/workflows/deploy.yml/badge.svg)](https://github.com/muhammadanas20/Medi-Mind/actions/workflows/deploy.yml)
-![tests](https://img.shields.io/badge/unit%20tests-39%20passing-07c5a8)
+![tests](https://img.shields.io/badge/unit%20tests-66%20passing-07c5a8)
 ![offline](https://img.shields.io/badge/storage-IndexedDB%20%2B%20Dexie-07c5a8)
 
 > **Privacy-first. Local-first. Human-confirmed.**
@@ -33,6 +33,7 @@ Only the *Confirm* button writes schedules.
 | **Dose actions** | ✅ Taken · ⏰ Snooze (10/30/60 min) · ⏭ Skip · ↩︎ Undo |
 | **Pill identifier** | Photo → imprint OCR/AI-vision + color + shape → `matchPills()` scores a local reference DB → results shown as **possible matches with confidence %**, always with a "verify with packaging" warning — never a definitive ID |
 | **Dashboard** | Per-slot progress cards, next-dose chip, 7-day adherence graph, streaks, per-med adherence bars, activity timeline |
+| **Health log (optional)** | Opt-in BP, sugar, pulse, weight, SpO₂ and temperature. Scan a cuff/glucometer (AI or offline OCR) → review digits → 3-month history with trend charts. Heart and diabetes patients can keep clinic-ready logs without turning the feature on for everyone |
 | **Multi-provider AI** | OpenAI · Gemini · Claude · OpenRouter · Groq · **Ollama** & **LM Studio** (fully local inference). Fetch-based clients, no SDK bloat. **Test connection** button per provider |
 | **Security** | API keys AES-256-GCM encrypted in IndexedDB; optional **passcode lock** (PBKDF2 310k iters) re-encrypts keys so they need your passcode in memory |
 | **Family mode** | Multiple profiles (elderly, patients, dependents), quick-switcher in the header |
@@ -69,6 +70,7 @@ src/
 │   ├── notifications.ts  # SW/Notification bridge + chime/haptics
 │   ├── crypto.ts         # AES-GCM keys (+ optional passcode lock)
 │   ├── pills.ts          # pill reference DB + weighted confidence matcher
+│   ├── vitals.ts         # BP/sugar units, reference bands, OCR parse, 90-day window
 │   ├── image.ts          # downscale/contrast/color sampling
 │   └── ocr.ts            # lazy Tesseract worker
 ├── ai/
@@ -77,7 +79,7 @@ src/
 │   └── service.ts        # encrypted-key provider CRUD + extraction use cases
 ├── state/                # zustand UI store + dexie-react-hooks live queries
 ├── components/           # ui kit, layout shell, dose cards, camera, charts
-└── pages/                # Today · Meds · Scan · Pill ID · Insights · Settings · Onboarding
+└── pages/                # Today · Meds · Scan · Health · Pill ID · Insights · Settings · Onboarding
 ```
 
 ## 🛡️ Design principles
@@ -101,7 +103,7 @@ the app lands at `https://muhammadanas20.github.io/Medi-Mind/` fully offline-cap
 
 ## 🧭 Roadmap (v2)
 
-Family caregiver sync · voice reminders · watch integration · barcode scanning · refill & expiry alerts · drug-interaction warnings · doctor-visit timeline · PDF prescription archive · health reports · adherence analytics export
+Family caregiver sync · voice reminders · watch integration · barcode scanning · refill & expiry alerts · drug-interaction warnings · doctor-visit timeline · PDF prescription archive · health reports · adherence analytics export · clinician-ready vitals PDF
 
 ## ⚕️ Disclaimer
 

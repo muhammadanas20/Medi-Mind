@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { extractJsonBlock, parseDurationDays, parseExtraction, foodFromText } from './extract'
+import {
+  extractJsonBlock,
+  parseDurationDays,
+  parseExtraction,
+  parseVitalExtraction,
+  foodFromText,
+  coerceSugarContext,
+} from './extract'
 
 describe('extractJsonBlock', () => {
   it('unwraps markdown fences', () => {

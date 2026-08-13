@@ -3,10 +3,12 @@ import type {
   AiProviderConfig,
   AppSettings,
   DoseLog,
+  HealthTracker,
   Medication,
   PillScan,
   Prescription,
   Profile,
+  VitalReading,
 } from './types'
 import { DEFAULT_WINDOWS } from './reminders'
 
@@ -30,6 +32,8 @@ export class MediMindDB extends Dexie {
   prescriptions!: Table<Prescription, string>
   pillScans!: Table<PillScan, string>
   aiProviders!: Table<AiProviderConfig, string>
+  healthTrackers!: Table<HealthTracker, string>
+  vitalReadings!: Table<VitalReading, string>
   kv!: Table<{ key: string; value: unknown }, string>
 
   constructor() {
@@ -43,6 +47,18 @@ export class MediMindDB extends Dexie {
       pillScans: 'id, profileId, createdAt',
       aiProviders: 'id, kind, enabled',
       kv: 'key',
+    })
+    // Optional vitals log (BP / sugar / …) — 3-month history lives here.
+    this.version(2).stores({
+      profiles: 'id, name, createdAt',
+      medications: 'id, profileId, name, startDate, createdAt',
+      doseLogs: 'id, medicationId, profileId, date, slot, status, [date+slot], [medicationId+date]',
+      prescriptions: 'id, profileId, status, createdAt',
+      pillScans: 'id, profileId, createdAt',
+      aiProviders: 'id, kind, enabled',
+      kv: 'key',
+      healthTrackers: 'id, profileId, kind, &[profileId+kind], createdAt',
+      vitalReadings: 'id, profileId, trackerId, kind, date, recordedAt, [profileId+kind], [profileId+date]',
     })
   }
 }

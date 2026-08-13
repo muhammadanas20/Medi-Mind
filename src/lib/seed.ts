@@ -1,6 +1,7 @@
 import { db, uid, todayStr } from './db'
-import type { DoseLog, Medication, Profile } from './types'
+import type { DoseLog, HealthTracker, Medication, Profile, VitalReading } from './types'
 import { addDays, doseLogId, atTime } from './reminders'
+import { VITAL_META } from './vitals'
 
 const DEMO_MEDS: Omit<Medication, 'id' | 'profileId' | 'createdAt'>[] = [
   {
@@ -81,13 +82,88 @@ export async function seedDemoData(): Promise<Profile> {
     }
   }
   await db.doseLogs.bulkPut(logs)
+
+  // Optional vitals: demo patient is on Concor + Metformin → BP + sugar, ~3 months.
+  const bpTracker: HealthTracker = {
+    id: uid(), profileId: profile.id, kind: 'blood_pressure', enabled: true,
+    unit: VITAL_META.blood_pressure.unit, targetSystolicMax: 130, targetDiastolicMax: 80,
+    createdAt: new Date().toISOString(),
+  }
+  const sugarTracker: HealthTracker = {
+    id: uid(), profileId: profile.id, kind: 'blood_sugar', enabled: true,
+    unit: VITAL_META.blood_sugar.unit, targetMin: 70, targetMax: 130,
+    createdAt: new Date().toISOString(),
+  }
+  await db.healthTrackers.bulkAdd([bpTracker, sugarTracker])
+
+  const vitals: VitalReading[] = []
+  for (let d = 88; d >= 0; d -= 2) {
+    const date = addDays(today, -d)
+    const n = seeded01(d, 3)
+    const systolic = Math.round(118 + n * 20)
+    const diastolic = Math.round(74 + n * 12)
+    vitals.push({
+      id: uid(),
+      profileId: profile.id,
+      trackerId: bpTracker.id,
+      kind: 'blood_pressure',
+      date,
+      recordedAt: atTime(date, '07:20').toISOString(),
+      systolic,
+      diastolic,
+      pulse: Math.round(68 + n * 14),
+      unit: 'mmHg',
+      source: 'manual',
+      createdAt: atTime(date, '07:21').toISOString(),
+    })
+  }
+  for (let d = 87; d >= 0; d -= 2) {
+    const date = addDays(today, -d)
+    const n = seeded01(d, 7)
+    const fasting = Math.round(92 + n * 28)
+    vitals.push({
+      id: uid(),
+      profileId: profile.id,
+      trackerId: sugarTracker.id,
+      kind: 'blood_sugar',
+      date,
+      recordedAt: atTime(date, '07:05').toISOString(),
+      value: fasting,
+      unit: 'mg/dL',
+      context: 'fasting',
+      source: 'manual',
+      createdAt: atTime(date, '07:06').toISOString(),
+    })
+    if (d % 6 === 0) {
+      vitals.push({
+        id: uid(),
+        profileId: profile.id,
+        trackerId: sugarTracker.id,
+        kind: 'blood_sugar',
+        date,
+        recordedAt: atTime(date, '13:40').toISOString(),
+        value: Math.round(130 + n * 40),
+        unit: 'mg/dL',
+        context: 'after_meal',
+        source: 'manual',
+        createdAt: atTime(date, '13:41').toISOString(),
+      })
+    }
+  }
+  await db.vitalReadings.bulkAdd(vitals)
+
   return profile
+}
+
+function seeded01(i: number, salt: number): number {
+  const x = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453
+  return x - Math.floor(x)
 }
 
 export async function clearAllData(): Promise<void> {
   await db.transaction(
     'rw',
-    [db.profiles, db.medications, db.doseLogs, db.prescriptions, db.pillScans],
+    [db.profiles, db.medications, db.doseLogs, db.prescriptions, db.pillScans, db.healthTrackers, db.vitalReadings],
     async () => {
       await Promise.all([
         db.profiles.clear(),
@@ -95,6 +171,8 @@ export async function clearAllData(): Promise<void> {
         db.doseLogs.clear(),
         db.prescriptions.clear(),
         db.pillScans.clear(),
+        db.healthTrackers.clear(),
+        db.vitalReadings.clear(),
       ])
     },
   )

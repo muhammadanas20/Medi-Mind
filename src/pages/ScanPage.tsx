@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  ArrowLeft, ArrowRight, BadgeCheck, BrainCircuit, CalendarDays, CircleAlert,
-  FlaskConical, Loader2, PenLine, ScanLine, ShieldCheck, Sparkles, Stethoscope, Trash2, User,
+  Activity, ArrowLeft, ArrowRight, BadgeCheck, BrainCircuit, CalendarDays, CircleAlert,
+  FlaskConical, Loader2, PenLine, ScanLine, Search, ShieldCheck, Sparkles, Stethoscope, Trash2,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -168,7 +168,7 @@ export function ScanPage() {
             />
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {[
-                { icon: ScanLine, t: '1 · Scan', d: 'Camera or upload — image is processed on your terms' },
+                { icon: ScanLine, t: '1 · Scan', d: 'Camera or files — image is processed on your terms' },
                 { icon: BrainCircuit, t: '2 · Extract', d: 'AI structures medicines into reviewable cards' },
                 { icon: BadgeCheck, t: '3 · Confirm', d: 'You approve every entry before reminders start' },
               ].map((s) => (
@@ -180,6 +180,30 @@ export function ScanPage() {
                   </div>
                 </Card>
               ))}
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <Link to="/health?scan=1" className="block" data-testid="scan-goto-health">
+                <Card className="card-hover flex items-start gap-3 !p-4">
+                  <Activity className="mt-0.5 size-5 text-rose-500" />
+                  <div>
+                    <p className="text-sm font-bold">Scan a reading device</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      BP cuff, glucometer, oximeter — AI reads the screen into your 3-month health log.
+                    </p>
+                  </div>
+                </Card>
+              </Link>
+              <Link to="/pill-id" className="block" data-testid="scan-goto-pill">
+                <Card className="card-hover flex items-start gap-3 !p-4">
+                  <Search className="mt-0.5 size-5 text-accent-500" />
+                  <div>
+                    <p className="text-sm font-bold">Identify a pill</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Photo + imprint → possible matches with a confidence score. Never a diagnosis.
+                    </p>
+                  </div>
+                </Card>
+              </Link>
             </div>
           </motion.div>
         )}

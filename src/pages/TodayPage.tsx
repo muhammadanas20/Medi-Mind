@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ArrowRight, CalendarClock, Flame, Pill, ScanLine } from 'lucide-react'
+import { Activity, ArrowRight, CalendarClock, Flame, Pill, ScanLine } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { WeeklyBars } from '../components/charts'
 import { DoseRow } from '../components/dose'
@@ -7,12 +7,20 @@ import { Badge, Card, Ring, SectionTitle } from '../components/ui'
 import { adherenceSeries, overallAdherence, SLOT_META } from '../lib/reminders'
 import { formatTime } from '../lib/reminders'
 import { todayStr } from '../lib/db'
-import { useActiveProfile, useRecentLogs, useTodayDoses } from '../state/hooks'
+import { classifyReading, formatReading, formatReadingWhen, VITAL_META } from '../lib/vitals'
+import { useActiveProfile, useHealthTrackers, useRecentLogs, useTodayDoses, useVitalReadings } from '../state/hooks'
 
 export function TodayPage() {
   const profile = useActiveProfile()
   const data = useTodayDoses(profile?.id)
   const recentLogs = useRecentLogs(profile?.id, 7)
+  const trackers = useHealthTrackers(profile?.id)
+  const vitals = useVitalReadings(profile?.id, 90)
+  const enabledTrackers = (trackers ?? []).filter((t) => t.enabled)
+  const latestByKind = enabledTrackers.map((t) => ({
+    tracker: t,
+    reading: (vitals ?? []).find((r) => r.kind === t.kind),
+  }))
 
   const greeting = () => {
     const h = new Date().getHours()
