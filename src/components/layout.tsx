@@ -200,16 +200,21 @@ export function AppShell() {
       </div>
 
       {/* --------------------------- mobile bottom nav ----------------------- */}
-      <nav className="glass-strong fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-md items-center justify-around rounded-[26px] px-1.5 py-2 sm:px-2 lg:hidden">
+      <nav className="glass-strong fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-md items-end justify-around rounded-[26px] px-1.5 py-2 sm:px-2 lg:hidden">
         {MOBILE_NAV.map((n) =>
           n.fab ? (
-            <NavLink key={n.to} to={n.to} aria-label={n.label} data-testid="nav-scan">
-              <motion.div
-                whileTap={{ scale: 0.9 }}
-                className="animate-pulse-ring -mt-7 flex size-13 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-xl shadow-brand-500/40 sm:-mt-8 sm:size-14"
-              >
-                <n.icon className="size-6" strokeWidth={2.4} />
-              </motion.div>
+            <NavLink key={n.to} to={n.to} aria-label={n.label} data-testid="nav-scan" className="flex">
+              {({ isActive }) => (
+                <motion.div
+                  whileTap={{ scale: 0.9 }}
+                  className={cn(
+                    'animate-pulse-ring -mt-7 flex size-13 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-xl shadow-brand-500/40 sm:-mt-8 sm:size-14',
+                    isActive && 'ring-4 ring-brand-500/25',
+                  )}
+                >
+                  <n.icon className="size-6" strokeWidth={2.4} />
+                </motion.div>
+              )}
             </NavLink>
           ) : (
             <NavLink
@@ -220,13 +225,13 @@ export function AppShell() {
               data-testid={`nav-${n.label.toLowerCase().replace(' ', '-')}`}
               className={({ isActive }) =>
                 cn(
-                  'flex min-w-0 flex-col items-center gap-0.5 whitespace-nowrap rounded-2xl px-2 py-1.5 text-[10px] font-semibold transition-colors sm:px-3',
+                  'flex min-w-0 flex-col items-center gap-1 whitespace-nowrap rounded-2xl px-2.5 py-2 text-[10px] font-semibold transition-colors sm:px-3',
                   isActive ? 'text-brand-600 dark:text-brand-300' : 'text-slate-400 dark:text-slate-500',
                 )
               }
             >
               <n.icon className="size-5" strokeWidth={2.2} />
-              {n.label}
+              <span className="leading-none">{n.label}</span>
             </NavLink>
           ),
         )}

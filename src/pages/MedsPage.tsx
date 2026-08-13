@@ -229,7 +229,7 @@ export function MedicationForm({
     <Dialog open={open} onClose={onClose} title={existing ? 'Edit medicine' : 'Add medicine'} wide>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Medicine name">
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Concor" data-testid="med-name" autoFocus />
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Concor" data-testid="med-name" autoFocus={window.matchMedia('(pointer: fine)').matches} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Strength">

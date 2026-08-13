@@ -93,7 +93,7 @@ function ProfilesSection() {
       </div>
       <Dialog open={open} onClose={() => setOpen(false)} title="New profile">
         <div className="space-y-4">
-          <Field label="Name"><Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Grandma Rosa" /></Field>
+          <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Grandma Rosa" autoFocus={window.matchMedia('(pointer: fine)').matches} /></Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Emoji">
               <div className="flex gap-1.5">
@@ -324,14 +324,14 @@ function RemindersSection() {
                     type="time"
                     value={w.start}
                     onChange={(e) => setWindow(slot, 'start', e.target.value)}
-                    className="min-w-[5.25rem] flex-1 rounded-lg border border-slate-300/60 bg-white/60 px-2 py-1 font-semibold sm:flex-none dark:border-white/10 dark:bg-white/5"
+                    className="min-w-[5.25rem] flex-1 rounded-lg border border-slate-300/60 bg-white/60 px-2 py-1 text-base font-semibold sm:flex-none sm:text-xs dark:border-white/10 dark:bg-white/5"
                   />
                   <span className="text-slate-400">→</span>
                   <input
                     type="time"
                     value={w.end}
                     onChange={(e) => setWindow(slot, 'end', e.target.value)}
-                    className="min-w-[5.25rem] flex-1 rounded-lg border border-slate-300/60 bg-white/60 px-2 py-1 font-semibold sm:flex-none dark:border-white/10 dark:bg-white/5"
+                    className="min-w-[5.25rem] flex-1 rounded-lg border border-slate-300/60 bg-white/60 px-2 py-1 text-base font-semibold sm:flex-none sm:text-xs dark:border-white/10 dark:bg-white/5"
                   />
                 </div>
               </div>
