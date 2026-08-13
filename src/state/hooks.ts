@@ -4,7 +4,7 @@ import { db, getSettings, saveSettings, getActiveProfileId, setActiveProfileId, 
 import type { AppSettings, DoseLog, Medication, Profile, Slot } from '../lib/types'
 import { SLOTS } from '../lib/types'
 import { expandDoseInstances, type DoseInstance, isSnoozed } from '../lib/reminders'
-import { useUiStore } from './ui'
+import { applyTheme, useUiStore } from './ui'
 
 /* ------------------------------ bootstrap ------------------------------- */
 
@@ -22,7 +22,7 @@ export function useBootstrap(): boolean {
     const onChange = () => {
       const s = useUiStore.getState().settings
       if (s.theme === 'system') {
-        import('./ui').then((m) => m.applyTheme(s))
+        applyTheme(s)
       }
     }
     mq.addEventListener('change', onChange)
