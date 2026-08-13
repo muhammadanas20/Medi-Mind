@@ -128,6 +128,7 @@ export function TodayPage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 * gi }}
+            className="min-w-0"
           >
             <Card className="card-hover">
               <SectionTitle

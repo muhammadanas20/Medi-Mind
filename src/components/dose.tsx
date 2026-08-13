@@ -65,14 +65,18 @@ function DoseRowImpl({
         {instance.medicationName.slice(0, 1).toUpperCase()}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className={cn('truncate text-sm font-bold', log.status === 'taken' && 'line-through')}>
+        <div className="flex min-w-0 items-center gap-2">
+          <p className={cn('min-w-0 truncate text-sm font-bold', log.status === 'taken' && 'line-through')}>
             {instance.medicationName}
             {instance.strength && (
               <span className="ml-1.5 text-xs font-semibold text-slate-500">{instance.strength}</span>
             )}
           </p>
-          {instance.isCritical && <Badge tone="danger">Critical</Badge>}
+          {instance.isCritical && (
+            <Badge tone="danger" className="shrink-0">
+              Critical
+            </Badge>
+          )}
         </div>
         <p className="truncate text-xs text-slate-500 dark:text-slate-400">
           {instance.quantity} {instance.quantity === 1 ? 'tablet' : 'tablets'} · {foodLabel(instance.food)}
