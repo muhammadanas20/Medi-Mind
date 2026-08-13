@@ -56,9 +56,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if status=$(gh api repos/${{ github.repository }}/pages -q .status --silent 2>/dev/null); then
+          if gh api repos/${{ github.repository }}/pages --silent 2>/dev/null; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
-            echo "GitHub Pages is enabled (status: $status)."
+            echo "GitHub Pages is enabled."
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
             {
@@ -67,9 +67,9 @@ jobs:
               echo "Enable it once, then re-run this workflow:"
               echo "**Settings → Pages → Build and deployment → Source: GitHub Actions**"
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::warning::GitHub Pages is not enabled for this repo. Enable it: Settings → Pages → Source: GitHub Actions, then re-run Deploy."
+            echo "::warning::GitHub Pages is not enabled for this repo."
           fi
-
+          
       - name: Setup Pages
         if: steps.pages.outputs.enabled == 'true'
         uses: actions/configure-pages@v5
