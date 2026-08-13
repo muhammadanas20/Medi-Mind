@@ -178,3 +178,71 @@ export interface AiProviderConfig {
   lastTestAt?: string
   lastTestOk?: boolean
 }
+
+/* ----------------------------- health vitals ----------------------------- */
+
+/**
+ * Optional per-profile vitals log (BP, sugar, …).
+ * Patients opt in per metric. The UI surfaces ~3 months of history;
+ * older rows stay on-device until the user deletes them or wipes data.
+ */
+export type VitalKind =
+  | 'blood_pressure'
+  | 'blood_sugar'
+  | 'heart_rate'
+  | 'weight'
+  | 'spo2'
+  | 'temperature'
+
+export type BloodSugarContext = 'fasting' | 'before_meal' | 'after_meal' | 'random' | 'bedtime'
+
+export type VitalSource = 'manual' | 'device_scan' | 'ocr'
+
+export interface HealthTracker {
+  id: string
+  profileId: string
+  kind: VitalKind
+  enabled: boolean
+  unit: string
+  /** Personal target band (optional). Classification falls back to reference ranges. */
+  targetMin?: number
+  targetMax?: number
+  targetSystolicMax?: number
+  targetDiastolicMax?: number
+  createdAt: string
+}
+
+/** What the vision model returns from a device photo — UNTRUSTED until the user confirms. */
+export interface ExtractedVital {
+  kind?: VitalKind
+  value?: number
+  systolic?: number
+  diastolic?: number
+  pulse?: number
+  unit?: string
+  context?: string
+  deviceBrand?: string
+  confidenceNote?: string
+  recordedAtHint?: string
+}
+
+export interface VitalReading {
+  id: string
+  profileId: string
+  trackerId?: string
+  kind: VitalKind
+  /** ISO timestamp the reading was taken (user-editable). */
+  recordedAt: string
+  date: string // YYYY-MM-DD (local)
+  value?: number
+  systolic?: number
+  diastolic?: number
+  pulse?: number
+  unit: string
+  context?: BloodSugarContext
+  notes?: string
+  source: VitalSource
+  image?: Blob
+  aiRaw?: ExtractedVital
+  createdAt: string
+}

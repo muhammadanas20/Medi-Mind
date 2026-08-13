@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  CalendarClock, ChartNoAxesColumn, CheckCircle2, HeartPulse,
+  Activity, CalendarClock, ChartNoAxesColumn, CheckCircle2, HeartPulse,
   Info, Moon, Pill, ScanLine, Search, Settings2, Sun, TriangleAlert,
 } from 'lucide-react'
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
@@ -17,14 +17,28 @@ import { TodayPage } from '../pages/TodayPage'
 // analytics) are downloaded only when opened, then cached by the service worker.
 const MedsPage = lazy(() => import('../pages/MedsPage').then((module) => ({ default: module.MedsPage })))
 const ScanPage = lazy(() => import('../pages/ScanPage').then((module) => ({ default: module.ScanPage })))
+const HealthPage = lazy(() => import('../pages/HealthPage').then((module) => ({ default: module.HealthPage })))
 const PillIdPage = lazy(() => import('../pages/PillIdPage').then((module) => ({ default: module.PillIdPage })))
 const InsightsPage = lazy(() => import('../pages/InsightsPage').then((module) => ({ default: module.InsightsPage })))
 const SettingsPage = lazy(() => import('../pages/SettingsPage').then((module) => ({ default: module.SettingsPage })))
 
-const NAV = [
+type NavItem = { to: string; label: string; icon: typeof CalendarClock; end?: boolean; fab?: boolean }
+
+/** Mobile bottom bar — Health replaces Pill ID so daily vitals stay one tap away. */
+const MOBILE_NAV: NavItem[] = [
   { to: '/', label: 'Today', icon: CalendarClock, end: true },
   { to: '/meds', label: 'Meds', icon: Pill },
   { to: '/scan', label: 'Scan', icon: ScanLine, fab: true },
+  { to: '/health', label: 'Health', icon: Activity },
+  { to: '/insights', label: 'Insights', icon: ChartNoAxesColumn },
+]
+
+/** Desktop rail has room for Pill ID as well. */
+const DESKTOP_NAV: NavItem[] = [
+  { to: '/', label: 'Today', icon: CalendarClock, end: true },
+  { to: '/meds', label: 'Meds', icon: Pill },
+  { to: '/scan', label: 'Scan', icon: ScanLine },
+  { to: '/health', label: 'Health', icon: Activity },
   { to: '/pill-id', label: 'Pill ID', icon: Search },
   { to: '/insights', label: 'Insights', icon: ChartNoAxesColumn },
 ]
@@ -34,6 +48,7 @@ const ROUTE_TITLES: Record<string, string> = {
   '/': "Today's plan",
   '/meds': 'Medications',
   '/scan': 'Scan prescription',
+  '/health': 'Health log',
   '/pill-id': 'Pill identifier',
   '/insights': 'Insights',
   '/settings': 'Settings',
@@ -79,7 +94,7 @@ export function AppShell() {
       <aside className="sticky top-0 hidden h-dvh w-20 flex-col items-center gap-2 py-6 lg:flex">
         <Brand />
         <nav className="mt-6 flex flex-1 flex-col gap-1.5">
-          {NAV.map((n) => (
+          {DESKTOP_NAV.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
@@ -164,6 +179,7 @@ export function AppShell() {
                   <Route index element={<TodayPage />} />
                   <Route path="meds" element={<LazyPage><MedsPage /></LazyPage>} />
                   <Route path="scan" element={<LazyPage><ScanPage /></LazyPage>} />
+                  <Route path="health" element={<LazyPage><HealthPage /></LazyPage>} />
                   <Route path="pill-id" element={<LazyPage><PillIdPage /></LazyPage>} />
                   <Route path="insights" element={<LazyPage><InsightsPage /></LazyPage>} />
                   <Route path="settings" element={<LazyPage><SettingsPage /></LazyPage>} />
@@ -185,7 +201,7 @@ export function AppShell() {
 
       {/* --------------------------- mobile bottom nav ----------------------- */}
       <nav className="glass-strong fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-md items-center justify-around rounded-[26px] px-1.5 py-2 sm:px-2 lg:hidden">
-        {NAV.map((n) =>
+        {MOBILE_NAV.map((n) =>
           n.fab ? (
             <NavLink key={n.to} to={n.to} aria-label={n.label} data-testid="nav-scan">
               <motion.div
@@ -201,6 +217,7 @@ export function AppShell() {
               to={n.to}
               end={n.end}
               aria-label={n.label}
+              data-testid={`nav-${n.label.toLowerCase().replace(' ', '-')}`}
               className={({ isActive }) =>
                 cn(
                   'flex min-w-0 flex-col items-center gap-0.5 whitespace-nowrap rounded-2xl px-2 py-1.5 text-[10px] font-semibold transition-colors sm:px-3',
@@ -254,14 +271,14 @@ export function AppShell() {
 
 function Brand({ compact }: { compact?: boolean }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <picture className="block">
-        <img
-          src={`${import.meta.env.BASE_URL}icons/icon.svg`}
-          alt=""
-          className="size-10 drop-shadow-[0_6px_16px_rgb(7_197_168/0.35)]"
-        />
-      </picture>
+    <div className="flex items-center gap-2">
+      <img
+        src={`${import.meta.env.BASE_URL}icons/icon.svg`}
+        alt=""
+        width={32}
+        height={32}
+        className="size-8 rounded-[9px] shadow-md shadow-brand-500/25 lg:size-9 lg:rounded-[10px]"
+      />
       {!compact && (
         <span className="hidden text-lg font-extrabold tracking-tight lg:block">
           Medi<span className="text-gradient">Mind</span>

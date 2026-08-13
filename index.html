@@ -7,8 +7,14 @@
     <link rel="icon" type="image/png" sizes="16x16" href="%BASE_URL%icons/favicon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="%BASE_URL%icons/apple-touch-icon.png" />
     <link rel="mask-icon" href="%BASE_URL%icons/icon.svg" color="#07c5a8" />
+    <!-- iOS launch screens: small centered mark on ink, not a giant icon -->
+    <link rel="apple-touch-startup-image" href="%BASE_URL%icons/splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
+    <link rel="apple-touch-startup-image" href="%BASE_URL%icons/splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)" />
+    <link rel="apple-touch-startup-image" href="%BASE_URL%icons/splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
+    <link rel="apple-touch-startup-image" href="%BASE_URL%icons/splash-1080x1920.png" media="(device-width: 360px) and (device-height: 780px) and (-webkit-device-pixel-ratio: 3)" />
+    <link rel="apple-touch-startup-image" href="%BASE_URL%icons/splash-1170x2532.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0d9488" />
+    <meta name="theme-color" content="#0b0f14" />
     <meta name="description" content="Privacy-first, offline AI medication management platform — scan prescriptions, confirm, never miss a dose." />
     <meta name="application-name" content="MediMind" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -21,8 +27,43 @@
     <meta property="og:description" content="Privacy-first, offline AI medication management. AI extracts — you confirm — reminders never stop until done." />
     <meta property="og:image" content="%BASE_URL%icons/icon-512.png" />
     <title>MediMind — AI Medication Manager</title>
+    <style>
+      html, body { margin: 0; background: #0b0f14; min-height: 100dvh; }
+      #boot {
+        position: fixed; inset: 0; z-index: 99999;
+        display: grid; place-items: center;
+        background:
+          radial-gradient(28rem 18rem at 50% 38%, rgb(7 197 168 / 0.14), transparent 70%),
+          #0b0f14;
+        transition: opacity .42s cubic-bezier(.22, 1, .36, 1);
+      }
+      #boot.boot-out { opacity: 0; pointer-events: none; }
+      #boot .mark {
+        width: 52px; height: 52px; border-radius: 14px;
+        box-shadow: 0 10px 28px rgb(7 197 168 / 0.22);
+      }
+      #boot .dot {
+        width: 6px; height: 6px; margin: 14px auto 0;
+        border-radius: 999px; background: #07c5a8;
+        animation: boot-pulse 1.05s ease-in-out infinite;
+      }
+      @keyframes boot-pulse {
+        0%, 100% { opacity: .25; transform: scale(.85); }
+        50% { opacity: 1; transform: scale(1); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #boot .dot { animation: none; }
+        #boot { transition: none; }
+      }
+    </style>
   </head>
   <body>
+    <div id="boot" aria-hidden="true">
+      <div>
+        <img class="mark" src="%BASE_URL%icons/icon-192.png" width="52" height="52" alt="" />
+        <div class="dot"></div>
+      </div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

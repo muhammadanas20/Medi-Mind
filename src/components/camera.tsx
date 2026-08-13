@@ -1,13 +1,25 @@
-import { Camera, ImagePlus, RefreshCw, X } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Camera, FolderOpen, ImagePlus, RefreshCw, Smartphone, X } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { cn } from '../lib/utils'
 import { Button } from './ui'
 
 /**
- * Camera capture with graceful fallbacks:
- *  1. live getUserMedia viewfinder (environment camera)
- *  2. native file picker w/ capture attribute (mobile browsers)
+ * Camera capture with two *separate* photo sources:
+ *
+ *  1. Live getUserMedia viewfinder ("Open camera")
+ *  2. File-manager / photo-library picker ("Choose from files")
+ *
+ * IMPORTANT mobile fix: the gallery <input> must NOT have a `capture`
+ * attribute. `capture="environment"` tells iOS/Android to skip the file
+ * manager and jump straight into the camera — which is exactly what
+ * "Upload photo" must not do.
+ *
+ * A third, native-camera file input (WITH capture) is only offered as a
+ * fallback when getUserMedia is unavailable / denied.
  */
+
+const GALLERY_ACCEPT =
+  'image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif'
 
 export function CameraCapture({
   onCapture,
@@ -21,7 +33,8 @@ export function CameraCapture({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const galleryRef = useRef<HTMLInputElement>(null)
+  const nativeCameraRef = useRef<HTMLInputElement>(null)
   const [mode, setMode] = useState<'idle' | 'live' | 'error'>('idle')
   const [error, setError] = useState<string>('')
 
@@ -45,8 +58,8 @@ export function CameraCapture({
       setMode('live')
     } catch (e) {
       setError(e instanceof DOMException && e.name === 'NotAllowedError'
-        ? 'Camera permission denied — you can upload a photo instead.'
-        : 'No camera available — you can upload a photo instead.')
+        ? 'Camera permission denied — choose a photo from your files instead.'
+        : 'No camera available — choose a photo from your files instead.')
       setMode('error')
     }
   }, [])
@@ -71,15 +84,36 @@ export function CameraCapture({
     if (file) onCapture(file)
   }
 
+  const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    pickFile(e.target.files?.[0])
+    // allow picking the same file twice in a row
+    e.target.value = ''
+  }
+
   return (
     <div className={cn('relative overflow-hidden rounded-3xl', overlayClass)}>
+      {/* Gallery / file-manager picker — NO capture attribute */}
       <input
-        ref={fileRef}
+        ref={galleryRef}
+        type="file"
+        accept={GALLERY_ACCEPT}
+        className="hidden"
+        data-testid="gallery-file-input"
+        aria-hidden
+        tabIndex={-1}
+        onChange={onFileChange}
+      />
+      {/* Native camera fallback only — used when live preview is unavailable */}
+      <input
+        ref={nativeCameraRef}
         type="file"
         accept="image/*"
         capture="environment"
         className="hidden"
-        onChange={(e) => pickFile(e.target.files?.[0])}
+        data-testid="native-camera-input"
+        aria-hidden
+        tabIndex={-1}
+        onChange={onFileChange}
       />
 
       {mode === 'live' ? (
@@ -121,10 +155,28 @@ export function CameraCapture({
             <Button onClick={() => void start()} data-testid="open-camera">
               <Camera /> Open camera
             </Button>
-            <Button variant="outline" onClick={() => fileRef.current?.click()} data-testid="upload-photo">
-              <ImagePlus /> Upload photo
+            <Button
+              variant="outline"
+              onClick={() => galleryRef.current?.click()}
+              data-testid="upload-photo"
+            >
+              <FolderOpen /> Choose from files
             </Button>
           </div>
+          <p className="max-w-80 text-[11px] leading-relaxed text-slate-400">
+            <ImagePlus className="mr-1 inline size-3" />
+            “Choose from files” opens your gallery or file manager — it will not launch the camera.
+          </p>
+          {mode === 'error' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => nativeCameraRef.current?.click()}
+              data-testid="native-camera-fallback"
+            >
+              <Smartphone /> Use phone camera instead
+            </Button>
+          )}
         </div>
       )}
     </div>

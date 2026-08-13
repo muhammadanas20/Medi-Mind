@@ -2,8 +2,17 @@ import { db, uid } from '../lib/db'
 import { decryptSecret, encryptSecret } from '../lib/crypto'
 import type { AiProviderConfig, AiProviderKind } from '../lib/types'
 import { PROVIDER_PRESETS, testConnection, visionGenerate, type ProviderPreset } from './providers'
-import { PILL_PROMPT, PRESCRIPTION_PROMPT, parseExtraction, pillObservationSchema, extractJsonBlock, type PillObservation } from './extract'
-import type { ExtractedPrescription } from '../lib/types'
+import {
+  PILL_PROMPT,
+  PRESCRIPTION_PROMPT,
+  VITAL_PROMPT,
+  parseExtraction,
+  parseVitalExtraction,
+  pillObservationSchema,
+  extractJsonBlock,
+  type PillObservation,
+} from './extract'
+import type { ExtractedPrescription, ExtractedVital } from '../lib/types'
 
 /**
  * AI service — the ONLY module that talks to the network.
@@ -121,4 +130,25 @@ export async function observePill(
   })
   const parsed = pillObservationSchema.safeParse(JSON.parse(extractJsonBlock(raw)))
   return { ...(parsed.success ? parsed.data : { imprint: '', color: '', shape: 'other' }), providerLabel: provider.label }
+}
+
+export interface VitalExtractionOutcome {
+  extraction: ExtractedVital
+  providerLabel: string
+}
+
+export async function extractVitalReading(
+  imageBase64: string,
+  mimeType: string,
+): Promise<VitalExtractionOutcome> {
+  const provider = await getActiveProvider()
+  if (!provider) throw new Error('NO_PROVIDER')
+  const key = await keyFor(provider)
+  const raw = await visionGenerate(provider, key, {
+    prompt: VITAL_PROMPT,
+    imageBase64,
+    mimeType,
+    maxTokens: 800,
+  })
+  return { extraction: parseVitalExtraction(raw), providerLabel: provider.label }
 }

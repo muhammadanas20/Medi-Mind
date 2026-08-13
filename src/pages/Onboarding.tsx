@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, BadgeCheck, BellRing, BrainCircuit, LockKeyhole, ScanLine, Sparkles, User } from 'lucide-react'
+import { Activity, ArrowRight, BadgeCheck, BellRing, BrainCircuit, LockKeyhole, ScanLine, Sparkles, User } from 'lucide-react'
 import { useState } from 'react'
 import { Button, Card, Field, Input } from '../components/ui'
 import { requestNotificationPermission } from '../lib/notifications'
@@ -38,25 +38,27 @@ export function Onboarding({ done }: { done: () => void }) {
   }
 
   return (
-    <div className="flex min-h-dvh justify-center p-4">
+    <div className="flex min-h-dvh justify-center px-4 py-8">
       {/* `m-auto` centers the card when there is room, but keeps its top edge
           reachable when it is taller than the viewport (short / landscape
           screens) — `items-center` would clip it above the fold. */}
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
+        initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         className="m-auto w-full max-w-md"
       >
         <div className="mb-6 text-center">
-          <motion.div
-            initial={{ scale: 0.6, rotate: -12 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="mx-auto mb-4 flex size-16 items-center justify-center rounded-[22px] bg-gradient-to-br from-brand-400 to-accent-600 text-3xl shadow-xl shadow-brand-500/30"
-          >
-            💊
-          </motion.div>
+          <motion.img
+            src={`${import.meta.env.BASE_URL}icons/icon.svg`}
+            alt=""
+            width={56}
+            height={56}
+            initial={{ opacity: 0, scale: 0.86 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="mx-auto mb-3 size-14 rounded-[16px] shadow-lg shadow-brand-500/25"
+          />
           <h1 className="text-3xl font-extrabold tracking-tight">
             Medi<span className="text-gradient">Mind</span>
           </h1>
@@ -67,17 +69,18 @@ export function Onboarding({ done }: { done: () => void }) {
 
         <AnimatePresence mode="wait">
           {step === 0 && (
-            <motion.div key="s0" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-              <Card className="space-y-5 !p-5 sm:!p-7">
+            <motion.div key="s0" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <Card className="space-y-4 !p-5 sm:!p-6">
                 {[
                   { icon: ScanLine, t: 'Scan any prescription', d: 'AI reads it into structured medicines' },
                   { icon: BadgeCheck, t: 'You stay in control', d: 'Nothing becomes a reminder until you confirm it' },
+                  { icon: Activity, t: 'Optional health log', d: 'Track BP, sugar and more — scan the device or type it in' },
                   { icon: LockKeyhole, t: 'Offline & private', d: 'All data lives on this device — keys encrypted' },
                   { icon: BellRing, t: 'Never miss a dose', d: 'Smart reminders that re-nag until taken' },
                 ].map((f, i) => (
-                  <motion.div key={f.t} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.08 * i }} className="flex items-start gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-brand-500/12 text-brand-600 dark:text-brand-300">
-                      <f.icon className="size-5" />
+                  <motion.div key={f.t} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }} className="flex items-start gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-500/12 text-brand-600 dark:text-brand-300">
+                      <f.icon className="size-4" />
                     </div>
                     <div>
                       <p className="text-sm font-bold">{f.t}</p>
@@ -93,8 +96,8 @@ export function Onboarding({ done }: { done: () => void }) {
           )}
 
           {step === 1 && (
-            <motion.div key="s1" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-              <Card className="space-y-5 !p-5 sm:!p-7">
+            <motion.div key="s1" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <Card className="space-y-5 !p-5 sm:!p-6">
                 <div className="flex items-center gap-2">
                   <User className="size-5 text-brand-500" />
                   <h2 className="text-lg font-bold">Who is this profile for?</h2>
@@ -115,21 +118,19 @@ export function Onboarding({ done }: { done: () => void }) {
                     ))}
                   </div>
                 </Field>
-                <div className="flex gap-2">
-                  <Button
-                    className="flex-1"
-                    size="lg"
-                    disabled={!name.trim()}
-                    data-testid="onb-create"
-                    onClick={async () => {
-                      const p = await createProfile()
-                      setStep(2)
-                      showToast(`Welcome, ${p.name}!`, 'success')
-                    }}
-                  >
-                    Create profile <ArrowRight />
-                  </Button>
-                </div>
+                <Button
+                  className="w-full"
+                  size="lg"
+                  disabled={!name.trim()}
+                  data-testid="onb-create"
+                  onClick={async () => {
+                    const p = await createProfile()
+                    setStep(2)
+                    showToast(`Welcome, ${p.name}!`, 'success')
+                  }}
+                >
+                  Create profile <ArrowRight />
+                </Button>
                 <Button
                   variant="ghost"
                   className="w-full"
@@ -147,8 +148,8 @@ export function Onboarding({ done }: { done: () => void }) {
           )}
 
           {step === 2 && (
-            <motion.div key="s2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-              <Card className="space-y-5 !p-5 sm:!p-7">
+            <motion.div key="s2" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <Card className="space-y-5 !p-5 sm:!p-6">
                 <div className="flex items-center gap-2">
                   <BellRing className="size-5 text-brand-500" />
                   <h2 className="text-lg font-bold">Almost ready</h2>
@@ -176,15 +177,15 @@ export function Onboarding({ done }: { done: () => void }) {
           )}
 
           {step === 3 && (
-            <motion.div key="s3" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }}>
-              <Card className="space-y-5 !p-5 text-center sm:!p-7">
+            <motion.div key="s3" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+              <Card className="space-y-5 !p-5 text-center sm:!p-6">
                 <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 260, damping: 16 }}
-                  className="mx-auto flex size-20 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 280, damping: 20 }}
+                  className="mx-auto flex size-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500"
                 >
-                  <BadgeCheck className="size-10" />
+                  <BadgeCheck className="size-8" />
                 </motion.div>
                 <h2 className="text-2xl font-extrabold tracking-tight">All set!</h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -195,7 +196,6 @@ export function Onboarding({ done }: { done: () => void }) {
                   size="lg"
                   data-testid="onb-finish"
                   onClick={async () => {
-                    // profile was created in step 1 — find it
                     const profiles = await db.profiles.toArray()
                     await finish(profiles[profiles.length - 1]?.id)
                   }}

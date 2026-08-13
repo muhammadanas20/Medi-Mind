@@ -6,7 +6,14 @@ import {
   shouldRemindNow,
   type DoseInstance,
 } from './reminders'
-import { buildDoseNotification, feedbackPing, fireNotification } from './notifications'
+import {
+  buildDoseNotification,
+  feedbackPing,
+  fireNotification,
+  syncReminderSchedule,
+  type ScheduledReminder,
+} from './notifications'
+import { addDays, dateStr } from './reminders'
 
 /**
  * Runtime scheduler — a 30s ticker driving the pure engine:
@@ -33,9 +40,23 @@ function emitDue(due: DoseInstance[]): void {
 
 export function startScheduler(getSettings: () => AppSettings): () => void {
   stopScheduler()
+  const run = () => void tick(getSettings())
   void tick(getSettings())
-  timer = setInterval(() => void tick(getSettings()), TICK_MS)
-  return stopScheduler
+  timer = setInterval(run, TICK_MS)
+  document.addEventListener('medimind:tick', run)
+  const onHide = () => {
+    if (document.visibilityState === 'hidden') {
+      void publishUpcomingReminders(getSettings())
+    }
+  }
+  document.addEventListener('visibilitychange', onHide)
+  window.addEventListener('pagehide', onHide)
+  return () => {
+    stopScheduler()
+    document.removeEventListener('medimind:tick', run)
+    document.removeEventListener('visibilitychange', onHide)
+    window.removeEventListener('pagehide', onHide)
+  }
 }
 
 export function stopScheduler(): void {
@@ -47,11 +68,11 @@ export async function tick(settings: AppSettings, now = new Date()): Promise<voi
   if (ticking) return
   ticking = true
   try {
-    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    const today = dateStr(now)
     const meds = (await db.medications.toArray()).filter((m) => m.active)
 
     /* 1 — materialize today's logs */
-    const instances = expandDoseInstances(meds, dateStr, settings.reminderWindows)
+    const instances = expandDoseInstances(meds, today, settings.reminderWindows)
     const existing = new Map(
       (await db.doseLogs.bulkGet(instances.map((i) => i.logId)))
         .filter(Boolean)
@@ -111,8 +132,52 @@ export async function tick(settings: AppSettings, now = new Date()): Promise<voi
       feedbackPing({ sound: settings.soundEnabled, haptics: settings.haptics })
       emitDue(dueNow)
     }
+    await publishUpcomingReminders(settings, now)
   } finally {
     ticking = false
+  }
+}
+
+/** Push the next ~36 hours of pending doses to the service worker so the
+ *  phone can still alert after the user leaves / swipes MediMind away. */
+export async function publishUpcomingReminders(settings: AppSettings, now = new Date()): Promise<void> {
+  const meds = (await db.medications.toArray()).filter((m) => m.active)
+  const today = dateStr(now)
+  const tomorrow = addDays(today, 1)
+  const instances = [
+    ...expandDoseInstances(meds, today, settings.reminderWindows),
+    ...expandDoseInstances(meds, tomorrow, settings.reminderWindows),
+  ]
+  const logs = new Map(
+    (await db.doseLogs.bulkGet(instances.map((i) => i.logId)))
+      .filter(Boolean)
+      .map((l) => [l!.id, l!]),
+  )
+  const reminders: ScheduledReminder[] = []
+  for (const inst of instances) {
+    const log = logs.get(inst.logId)
+    if (log && log.status !== 'pending') continue
+    if (log?.snoozeUntil && new Date(log.snoozeUntil).getTime() > now.getTime()) {
+      reminders.push(toScheduled(inst, new Date(log.snoozeUntil).getTime()))
+      continue
+    }
+    reminders.push(toScheduled(inst, inst.windowStart.getTime()))
+  }
+  await syncReminderSchedule(reminders)
+}
+
+function toScheduled(inst: DoseInstance, at: number): ScheduledReminder {
+  const n = buildDoseNotification(inst, false)
+  return {
+    tag: inst.logId,
+    logId: inst.logId,
+    title: n.title,
+    body: n.body,
+    at,
+    critical: inst.isCritical,
+    medicationName: inst.medicationName,
+    url: `${import.meta.env.BASE_URL}#/`,
+    icon: `${import.meta.env.BASE_URL}icons/icon-192.png`,
   }
 }
 

@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Bell, BellRing, BrainCircuit, Check, CircleCheck, CircleX, Clock, Download, KeyRound,
+  Bell, BellRing, BrainCircuit, Check, Clock, Download, KeyRound,
   Loader2, Lock, LockOpen, Moon, Plus, Sun, TestTubeDiagonal, Trash2, Type, Upload, UserPlus, Users, Vibrate, Waves,
 } from 'lucide-react'
 import { useRef, useState } from 'react'
@@ -13,7 +13,9 @@ import {
 } from '../ai/service'
 import { PROVIDER_PRESETS, type ProviderPreset } from '../ai/providers'
 import { db, uid } from '../lib/db'
-import { requestNotificationPermission, notificationPermission } from '../lib/notifications'
+import {
+  requestNotificationPermission, notificationPermission, sendTestNotification, enableBackgroundSync,
+} from '../lib/notifications'
 import { clearAllData, seedDemoData } from '../lib/seed'
 import type { AiProviderConfig, Profile, Slot } from '../lib/types'
 import { SLOTS } from '../lib/types'
@@ -171,42 +173,54 @@ function AiSection() {
         device to the provider — nothing passes through our servers (there are none).
         Local options (Ollama, LM Studio) keep even the inference on your machine.
       </p>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid gap-3">
         {PROVIDER_PRESETS.map((p) => {
           const cfg = providers?.find((x) => x.kind === p.kind)
+          const active = !!cfg?.enabled
           return (
             <div
               key={p.kind}
               className={
-                cfg?.enabled
-                  ? 'flex items-center gap-3 rounded-2xl border border-brand-500/40 bg-brand-500/[0.06] p-3'
-                  : 'flex items-center gap-3 rounded-2xl border border-slate-300/50 p-3 dark:border-white/10'
+                active
+                  ? 'rounded-2xl border border-brand-500/40 bg-brand-500/[0.06] p-3.5'
+                  : 'rounded-2xl border border-slate-300/50 p-3.5 dark:border-white/10'
               }
             >
-              <div className={`flex size-10 items-center justify-center rounded-xl ${cfg?.enabled ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300' : 'bg-slate-500/10 text-slate-400'}`}>
-                <KeyRound className="size-5" />
+              <div className="flex items-start gap-3">
+                <div className={`flex size-11 shrink-0 items-center justify-center rounded-2xl ${active ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300' : 'bg-slate-500/10 text-slate-400'}`}>
+                  <KeyRound className="size-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="text-sm font-bold">{p.label}</p>
+                    {p.local && <Badge tone="success">offline</Badge>}
+                    {cfg?.lastTestOk && <Badge tone="success">tested</Badge>}
+                    {cfg?.lastTestOk === false && <Badge tone="danger">failed</Badge>}
+                  </div>
+                  <p className="mt-0.5 truncate text-[11px] text-slate-400">
+                    {cfg ? `${cfg.model}${cfg.encryptedKey ? ' · key saved' : ''}` : 'Not configured'}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold">
-                  {p.label} {p.local && <Badge tone="success" className="ml-1">offline</Badge>}
-                </p>
-                <p className="truncate text-[11px] text-slate-400">
-                  {cfg ? `${cfg.model}${cfg.encryptedKey ? ' · key saved' : ''}` : 'Not configured'}
-                </p>
-              </div>
-              {cfg?.lastTestOk && <CircleCheck className="size-4 shrink-0 text-emerald-500" />}
-              {cfg?.lastTestOk === false && <CircleX className="size-4 shrink-0 text-danger-500" />}
-              {cfg ? (
-                <>
-                  <Button size="sm" variant="ghost" onClick={() => void setActiveProvider(cfg.id)}>Use</Button>
-                  <Button size="sm" variant="ghost" onClick={() => openFor(p, cfg)}>Edit</Button>
-                  <Button size="iconsm" variant="ghost" className="text-danger-500" onClick={() => void removeProvider(cfg.id)}>
-                    <Trash2 />
+              <div className="mt-3 flex flex-wrap gap-2">
+                {cfg ? (
+                  <>
+                    <Button size="sm" variant="subtle" className="flex-1 sm:flex-none" onClick={() => void setActiveProvider(cfg.id)}>
+                      <Check /> Use this
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1 sm:flex-none" onClick={() => openFor(p, cfg)}>
+                      Edit
+                    </Button>
+                    <Button size="iconsm" variant="ghost" className="text-danger-500" aria-label={`Remove ${p.label}`} onClick={() => void removeProvider(cfg.id)}>
+                      <Trash2 />
+                    </Button>
+                  </>
+                ) : (
+                  <Button size="sm" variant="subtle" className="w-full sm:w-auto" onClick={() => openFor(p)}>
+                    <Plus /> Set up
                   </Button>
-                </>
-              ) : (
-                <Button size="sm" variant="subtle" onClick={() => openFor(p)}><Plus /> Set up</Button>
-              )}
+                )}
+              </div>
             </div>
           )
         })}
@@ -250,16 +264,25 @@ function RemindersSection() {
 
   return (
     <Card>
-      <SectionTitle
-        right={
-          perm !== 'granted' && perm !== 'unsupported' ? (
+      <SectionTitle>
+        <span className="inline-flex items-center gap-2"><BellRing className="size-5" /> Phone alerts</span>
+      </SectionTitle>
+      <div className="mb-4 rounded-2xl border border-brand-500/25 bg-brand-500/[0.06] p-3.5">
+        <p className="text-sm font-bold">Get reminded like a real app</p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          Allow notifications, then add MediMind to your home screen. Dose alerts show on the
+          lock screen with Taken / Snooze — even if you leave the app. Works best on Android;
+          iPhone needs the home-screen icon and notification permission.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {perm !== 'granted' && perm !== 'unsupported' ? (
             <Button
               size="sm"
-              variant="subtle"
               data-testid="enable-notifications"
               onClick={async () => {
                 const p = await requestNotificationPermission()
                 setPerm(p)
+                if (p === 'granted') await enableBackgroundSync()
                 showToast(p === 'granted' ? 'Notifications enabled 🔔' : 'Permission denied by browser', p === 'granted' ? 'success' : 'error')
               }}
             >
@@ -269,9 +292,22 @@ function RemindersSection() {
             <Badge tone={perm === 'granted' ? 'success' : 'neutral'}>
               <Bell className="size-3" /> {perm === 'granted' ? 'Notifications on' : 'Unavailable — in-app alerts used'}
             </Badge>
-          )
-        }
-      >
+          )}
+          {perm === 'granted' && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                const ok = await sendTestNotification(true)
+                showToast(ok ? 'Test alert sent — check your notification shade' : 'Could not send a test alert', ok ? 'success' : 'error')
+              }}
+            >
+              <Bell /> Send test alert
+            </Button>
+          )}
+        </div>
+      </div>
+      <SectionTitle>
         <span className="inline-flex items-center gap-2"><Clock className="size-5" /> Reminder windows</span>
       </SectionTitle>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -440,6 +476,8 @@ function DataSection() {
       doseLogs: (await db.doseLogs.toArray()).slice(-2000),
       prescriptions: (await db.prescriptions.toArray()).map((p) => ({ ...p, image: undefined })),
       pillScans: (await db.pillScans.toArray()).map((p) => ({ ...p, image: undefined })),
+      healthTrackers: await db.healthTrackers.toArray(),
+      vitalReadings: (await db.vitalReadings.toArray()).map((r) => ({ ...r, image: undefined })),
     }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const a = document.createElement('a')
@@ -456,13 +494,21 @@ function DataSection() {
         profiles?: Profile[]
         medications?: never[]
         doseLogs?: never[]
+        healthTrackers?: never[]
+        vitalReadings?: never[]
       }
       if (!data.profiles || !data.medications) throw new Error('Not a MediMind backup file')
-      await db.transaction('rw', [db.profiles, db.medications, db.doseLogs], async () => {
-        await db.profiles.bulkPut(data.profiles!)
-        await db.medications.bulkPut(data.medications!)
-        await db.doseLogs.bulkPut(data.doseLogs ?? [])
-      })
+      await db.transaction(
+        'rw',
+        [db.profiles, db.medications, db.doseLogs, db.healthTrackers, db.vitalReadings],
+        async () => {
+          await db.profiles.bulkPut(data.profiles!)
+          await db.medications.bulkPut(data.medications!)
+          await db.doseLogs.bulkPut(data.doseLogs ?? [])
+          if (data.healthTrackers?.length) await db.healthTrackers.bulkPut(data.healthTrackers)
+          if (data.vitalReadings?.length) await db.vitalReadings.bulkPut(data.vitalReadings)
+        },
+      )
       showToast('Backup imported ✓', 'success')
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Import failed', 'error')
@@ -494,7 +540,7 @@ function DataSection() {
         {confirmWipe && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
             <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl bg-danger-500/10 p-3 text-sm">
-              <span>This deletes all profiles, medicines, dose history, scans and keys from this device.</span>
+              <span>This deletes all profiles, medicines, dose history, health readings, scans and keys from this device.</span>
               <Button size="sm" variant="danger" data-testid="confirm-wipe" onClick={async () => { await clearAllData(); showToast('All local data erased'); setConfirmWipe(false) }}>
                 Yes, erase
               </Button>
