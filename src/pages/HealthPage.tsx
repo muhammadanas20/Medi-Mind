@@ -228,7 +228,7 @@ export function HealthPage() {
     <div className="space-y-6 pb-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
             Health <span className="text-gradient">log</span>
           </h1>
           <p className="mt-1 max-w-xl text-sm text-slate-500 dark:text-slate-400">

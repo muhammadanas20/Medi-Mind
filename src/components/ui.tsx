@@ -113,7 +113,8 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
     <input
       ref={ref}
       className={cn(
-        'h-11 w-full rounded-2xl border border-slate-300/70 bg-white/60 px-4 text-sm outline-none transition-all placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-white/10 dark:bg-white/5 dark:placeholder:text-slate-500',
+        // text-base on phones: iOS Safari auto-zooms into fields smaller than 16px
+        'h-11 w-full rounded-2xl border border-slate-300/70 bg-white/60 px-4 text-base outline-none transition-all placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-white/10 dark:bg-white/5 dark:placeholder:text-slate-500 sm:text-sm',
         className,
       )}
       {...props}
@@ -127,7 +128,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
     <textarea
       ref={ref}
       className={cn(
-        'min-h-24 w-full rounded-2xl border border-slate-300/70 bg-white/60 p-4 text-sm outline-none transition-all placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-white/10 dark:bg-white/5',
+        'min-h-24 w-full rounded-2xl border border-slate-300/70 bg-white/60 p-4 text-base outline-none transition-all placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-white/10 dark:bg-white/5 sm:text-sm',
         className,
       )}
       {...props}
@@ -141,9 +142,17 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
     <select
       ref={ref}
       className={cn(
-        'h-11 w-full appearance-none rounded-2xl border border-slate-300/70 bg-white/60 px-4 text-sm outline-none transition-all focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-white/10 dark:bg-ink-700',
+        // text-base on phones (iOS zoom fix) + a visible chevron: `appearance-none`
+        // removes the native arrow on iOS, so without this the control looks inert
+        'h-11 w-full cursor-pointer appearance-none rounded-2xl border border-slate-300/70 bg-white/60 py-0 pl-4 pr-10 text-base outline-none transition-all focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-white/10 dark:bg-ink-700 sm:text-sm',
         className,
       )}
+      style={{
+        backgroundImage:
+          "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%2394a3b8\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m6 9 6 6 6-6\"/></svg>')",
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'right 0.8rem center',
+      }}
       {...props}
     />
   ),
@@ -234,14 +243,12 @@ export function Dialog({
               wide ? 'max-w-2xl' : 'max-w-md',
             )}
           >
-            {(title || true) && (
-              <div className="mb-4 flex items-start justify-between gap-4">
-                <h3 className="text-lg font-bold tracking-tight">{title}</h3>
-                <Button variant="ghost" size="iconsm" onClick={onClose} aria-label="Close">
-                  <X />
-                </Button>
-              </div>
-            )}
+            <div className="mb-4 flex items-start justify-between gap-4">
+              {title != null && <h3 className="text-lg font-bold tracking-tight">{title}</h3>}
+              <Button variant="ghost" size="iconsm" onClick={onClose} aria-label="Close">
+                <X />
+              </Button>
+            </div>
             <DialogCtx.Provider value={onClose}>{children}</DialogCtx.Provider>
           </motion.div>
         </motion.div>

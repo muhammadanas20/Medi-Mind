@@ -417,22 +417,22 @@ function MedicineReviewCard({
     <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <Card className={`relative overflow-hidden ${hasName ? '' : 'border-warn-500/40'}`}>
         <div className="absolute inset-y-0 left-0 w-1" style={{ background: color }} />
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
           <Input
-            className="!h-10 min-w-36 flex-1 font-bold"
+            className="!h-10 col-span-2 min-w-36 font-bold sm:col-span-1 sm:flex-1"
             value={med.medicine}
             placeholder="Medicine name *"
             data-testid={`review-med-${index}`}
             onChange={(e) => onChange({ ...med, medicine: e.target.value })}
           />
           <Input
-            className="!h-10 w-28"
+            className="!h-10 w-full sm:w-28"
             value={med.strength ?? ''}
             placeholder="Strength"
             onChange={(e) => onChange({ ...med, strength: e.target.value })}
           />
           <Select
-            className="!h-10 w-28"
+            className="!h-10 w-full sm:w-28"
             value={med.foodRelation ?? 'any'}
             onChange={(e) => onChange({ ...med, foodRelation: e.target.value as FoodInstruction })}
           >
@@ -442,12 +442,12 @@ function MedicineReviewCard({
             <option value="with">With food</option>
           </Select>
           <Input
-            className="!h-10 w-28"
+            className="!h-10 w-full sm:w-28"
             value={med.duration ?? ''}
             placeholder="Duration"
             onChange={(e) => onChange({ ...med, duration: e.target.value })}
           />
-          <Button size="iconsm" variant="ghost" className="text-danger-500" onClick={onRemove} aria-label="Remove medicine">
+          <Button size="iconsm" variant="ghost" className="justify-self-end text-danger-500 sm:justify-self-auto" onClick={onRemove} aria-label="Remove medicine">
             <Trash2 />
           </Button>
         </div>
