@@ -58,3 +58,77 @@ test('settings: AI providers, encrypted-key hint and reminder windows', async ({
     await expect(page.getByText(label).first()).toBeVisible()
   }
 })
+
+/**
+ * Regression: routes must never blank on navigation.
+ *
+ * Previously the app keyed an AnimatePresence wrapper by pathname around a
+ * shared <Outlet/>. Because <Outlet/> always reflects the *current* location,
+ * the exiting node rendered the new route instead of the old one — with lazy
+ * chunks this left the viewport blank (e.g. tapping Settings "did nothing").
+ * These tests walk every route and assert real page content is visible.
+ */
+test('route navigation: every page opens with content (no blank pages)', async ({ page }) => {
+  await completeOnboarding(page)
+
+  // Today (index route)
+  await expect(page.getByRole('heading', { level: 1, name: /today's plan/i })).toBeVisible()
+
+  // Medications (lazy)
+  await page.getByTestId('nav-meds').click()
+  await expect(page.getByTestId('add-med')).toBeVisible()
+  await expect(page).toHaveURL(/#\/meds$/)
+
+  // Scan (lazy, camera page). NOTE: `nav-scan` exists twice in the DOM — the
+  // desktop side rail and the mobile FAB — so scope to the first (side rail);
+  // the desktop viewport used here renders both.
+  await page.getByTestId('nav-scan').first().click()
+  await expect(page.getByRole('heading', { level: 1, name: /scan prescription/i })).toBeVisible()
+  await expect(page.getByText(/AI extracts — you confirm/i)).toBeVisible()
+
+  // Pill identifier (lazy)
+  await page.getByTestId('nav-pill-id').click()
+  await expect(page.getByRole('heading', { level: 1, name: /pill identifier/i })).toBeVisible()
+
+  // Insights (lazy)
+  await page.getByTestId('nav-insights').click()
+  await expect(page.getByRole('heading', { level: 1, name: /insights/i })).toBeVisible()
+
+  // Settings via the header gear (the route that used to go blank)
+  await page.getByTestId('open-settings').click()
+  await expect(page.getByText('AI providers')).toBeVisible()
+  await expect(page).toHaveURL(/#\/settings$/)
+
+  // and back to Today
+  await page.getByTestId('nav-today').click()
+  await expect(page.getByRole('heading', { level: 1, name: /today's plan/i })).toBeVisible()
+})
+
+test('deep links load lazy routes directly (fresh page load) without blanking', async ({ page }) => {
+  await completeOnboarding(page)
+
+  // A full page load straight into a lazy route: the app must hydrate from
+  // IndexedDB, skip onboarding, and render the requested page — not a blank.
+  await page.goto('/#/settings')
+  await expect(page.getByText('AI providers')).toBeVisible()
+
+  await page.goto('/#/insights')
+  await expect(page.getByRole('heading', { level: 1, name: /insights/i })).toBeVisible()
+
+  // unknown hash falls back to Today
+  await page.goto('/#/does-not-exist')
+  await expect(page.getByRole('heading', { level: 1, name: /today's plan/i })).toBeVisible()
+})
+
+test('navigation resets scroll position and updates the document title', async ({ page }) => {
+  await completeOnboarding(page)
+
+  await page.evaluate(() => window.scrollTo(0, 1000))
+  await page.getByTestId('nav-meds').click()
+  await expect(page.getByTestId('add-med')).toBeVisible()
+  await expect(page).toHaveURL(/#\/meds$/)
+
+  // companion navigation fix: scroll must reset to the top on route change
+  expect(await page.evaluate(() => window.scrollY)).toBe(0)
+  await expect(page).toHaveTitle(/Medications · MediMind/)
+})

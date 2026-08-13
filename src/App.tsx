@@ -71,6 +71,9 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <div className="app-bg" />
       {locked && <LockScreen />}
+      {/* All routing lives in AppShell: it owns the page route table so route
+          transitions (AnimatePresence) can render each page with its own
+          content instead of a shared <Outlet/> (which caused blank pages). */}
       <HashRouter>
         <AppShell />
       </HashRouter>
