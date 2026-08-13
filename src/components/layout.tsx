@@ -1,12 +1,12 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Activity, CalendarClock, ChartNoAxesColumn, CheckCircle2, HeartPulse,
-  Info, LockKeyhole, Moon, Pill, ScanLine, Search, Settings2, Sun, TriangleAlert,
+  Activity, CalendarClock, ChartNoAxesColumn, CheckCircle2, CircleAlert, HeartPulse,
+  Info, LockKeyhole, Moon, Pill, ScanLine, Search, Settings2, Sun, X,
 } from 'lucide-react'
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '../lib/utils'
-import { useUiStore } from '../state/ui'
+import { TOAST_DURATION_MS, useUiStore, type ToastKind } from '../state/ui'
 import { usePatchSettings, useProfiles, useSetActiveProfile, useActiveProfile } from '../state/hooks'
 import { InstallAppBanner } from './install'
 import { Button } from './ui'
@@ -56,6 +56,13 @@ const ROUTE_TITLES: Record<string, string> = {
 const BASE_TITLE = 'MediMind — AI Medication Manager'
 const LG_MEDIA_QUERY = '(min-width: 1024px)'
 
+/** Visual language for the modern toast: tinted icon chip, colored progress bar, fallback title. */
+const TOAST_META: Record<ToastKind, { icon: typeof Info; chip: string; bar: string; title: string }> = {
+  success: { icon: CheckCircle2, chip: 'bg-emerald-500', bar: 'bg-emerald-500', title: 'Success' },
+  info: { icon: Info, chip: 'bg-brand-500', bar: 'bg-brand-500', title: 'Heads up' },
+  error: { icon: CircleAlert, chip: 'bg-danger-500', bar: 'bg-danger-500', title: 'Something went wrong' },
+}
+
 function navTestId(label: string) {
   return `nav-${label.toLowerCase().replace(/\s+/g, '-')}`
 }
@@ -100,6 +107,7 @@ export function AppShell() {
   const settings = useUiStore((s) => s.settings)
   const patch = usePatchSettings()
   const toast = useUiStore((s) => s.toast)
+  const dismissToast = useUiStore((s) => s.dismissToast)
   const locked = useUiStore((s) => s.locked)
   const setShowLockScreen = useUiStore((s) => s.setShowLockScreen)
   const location = useLocation()
@@ -287,22 +295,65 @@ export function AppShell() {
 
       {/* -------------------------------- toast ------------------------------ */}
       <AnimatePresence>
-        {toast && (
-          <motion.div
-            key={toast.id}
-            initial={{ opacity: 0, y: -16, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="glass-strong fixed left-1/2 top-[max(1rem,env(safe-area-inset-top))] z-[60] flex w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium"
-          >
-            {toast.kind === 'success' && <CheckCircle2 className="size-4 text-emerald-500" />}
-            {toast.kind === 'error' && <TriangleAlert className="size-4 text-danger-500" />}
-            {toast.kind === 'info' && <Info className="size-4 text-brand-500" />}
-            {toast.message}
-          </motion.div>
-        )}
+        {toast && <ToastView key={toast.id} toast={toast} onDismiss={dismissToast} />}
       </AnimatePresence>
     </div>
+  )
+}
+
+/** Modern in-app toast: tinted icon chip, bold title, clear message, dismiss button, auto-dismiss progress bar. */
+function ToastView({
+  toast,
+  onDismiss,
+}: {
+  toast: { id: number; title?: string; message: string; kind: ToastKind }
+  onDismiss: () => void
+}) {
+  const meta = TOAST_META[toast.kind]
+  const Icon = meta.icon
+  return (
+    <motion.div
+      role="status"
+      aria-live="polite"
+      data-testid="toast"
+      initial={{ opacity: 0, y: -24, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -12, scale: 0.97 }}
+      transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+      className="glass-strong fixed left-1/2 top-[max(1rem,env(safe-area-inset-top))] z-[60] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 overflow-hidden rounded-2xl"
+    >
+      <div className="flex items-start gap-3 p-3.5 sm:p-4">
+        <span
+          className={cn(
+            'flex size-9 shrink-0 items-center justify-center rounded-xl text-white shadow-md',
+            meta.chip,
+          )}
+        >
+          <Icon className="size-[18px]" strokeWidth={2.4} />
+        </span>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <p className="text-sm font-bold tracking-tight">{toast.title ?? meta.title}</p>
+          <p className="mt-0.5 break-words text-[13px] font-medium leading-snug text-slate-500 dark:text-slate-400">
+            {toast.message}
+          </p>
+        </div>
+        <button
+          type="button"
+          aria-label="Dismiss notification"
+          onClick={onDismiss}
+          className="-m-1 shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-500/10 hover:text-slate-600 dark:hover:text-slate-200"
+        >
+          <X className="size-4" />
+        </button>
+      </div>
+      {/* auto-dismiss progress bar */}
+      <motion.span
+        initial={{ scaleX: 1 }}
+        animate={{ scaleX: 0 }}
+        transition={{ duration: TOAST_DURATION_MS / 1000, ease: 'linear' }}
+        className={cn('absolute inset-x-0 bottom-0 h-[3px] origin-left', meta.bar)}
+      />
+    </motion.div>
   )
 }
 

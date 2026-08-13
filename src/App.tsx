@@ -52,11 +52,11 @@ export default function App() {
       if (action === 'taken') {
         await markTaken(logId)
         useUiStore.getState().dismissDue(logId)
-        useUiStore.getState().showToast('Marked as taken from the notification', 'success')
+        useUiStore.getState().showToast('Marked as taken from the notification', 'success', 'Dose taken')
       } else if (action === 'snooze') {
         await snooze(logId, 15)
         useUiStore.getState().dismissDue(logId)
-        useUiStore.getState().showToast('Snoozed 15 minutes', 'info')
+        useUiStore.getState().showToast('Snoozed for 15 minutes', 'info', 'Reminder snoozed')
       }
       document.dispatchEvent(new CustomEvent('medimind:tick'))
     }
