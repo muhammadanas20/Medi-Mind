@@ -24,9 +24,9 @@ export function LockScreen() {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center p-4">
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-sm">
-        <Card className="space-y-5 !p-8 text-center">
+    <div className="flex min-h-dvh justify-center p-4">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="m-auto w-full max-w-sm">
+        <Card className="space-y-5 !p-6 text-center sm:!p-8">
           <div className="mx-auto flex size-16 items-center justify-center rounded-[22px] bg-gradient-to-br from-brand-400 to-accent-600 text-white shadow-lg">
             <LockKeyhole className="size-7" />
           </div>

@@ -38,12 +38,15 @@ export function Onboarding({ done }: { done: () => void }) {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center p-4">
+    <div className="flex min-h-dvh justify-center p-4">
+      {/* `m-auto` centers the card when there is room, but keeps its top edge
+          reachable when it is taller than the viewport (short / landscape
+          screens) — `items-center` would clip it above the fold. */}
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-md"
+        className="m-auto w-full max-w-md"
       >
         <div className="mb-6 text-center">
           <motion.div
@@ -65,7 +68,7 @@ export function Onboarding({ done }: { done: () => void }) {
         <AnimatePresence mode="wait">
           {step === 0 && (
             <motion.div key="s0" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-              <Card className="space-y-5 !p-7">
+              <Card className="space-y-5 !p-5 sm:!p-7">
                 {[
                   { icon: ScanLine, t: 'Scan any prescription', d: 'AI reads it into structured medicines' },
                   { icon: BadgeCheck, t: 'You stay in control', d: 'Nothing becomes a reminder until you confirm it' },
@@ -91,7 +94,7 @@ export function Onboarding({ done }: { done: () => void }) {
 
           {step === 1 && (
             <motion.div key="s1" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-              <Card className="space-y-5 !p-7">
+              <Card className="space-y-5 !p-5 sm:!p-7">
                 <div className="flex items-center gap-2">
                   <User className="size-5 text-brand-500" />
                   <h2 className="text-lg font-bold">Who is this profile for?</h2>
@@ -145,7 +148,7 @@ export function Onboarding({ done }: { done: () => void }) {
 
           {step === 2 && (
             <motion.div key="s2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-              <Card className="space-y-5 !p-7">
+              <Card className="space-y-5 !p-5 sm:!p-7">
                 <div className="flex items-center gap-2">
                   <BellRing className="size-5 text-brand-500" />
                   <h2 className="text-lg font-bold">Almost ready</h2>
@@ -174,7 +177,7 @@ export function Onboarding({ done }: { done: () => void }) {
 
           {step === 3 && (
             <motion.div key="s3" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }}>
-              <Card className="space-y-5 !p-7 text-center">
+              <Card className="space-y-5 !p-5 text-center sm:!p-7">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}

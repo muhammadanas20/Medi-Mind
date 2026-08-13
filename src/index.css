@@ -71,6 +71,11 @@
 html {
   scroll-behavior: smooth;
   color-scheme: light;
+  /* Never allow horizontal page scroll, whatever a nested row decides to do.
+     `clip` (not `hidden`) keeps `position: sticky` working on iOS/Safari. */
+  overflow-x: clip;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 html.dark {
   color-scheme: dark;
@@ -106,6 +111,7 @@ body {
   @apply bg-slate-100 text-slate-900 antialiased dark:bg-ink-950 dark:text-slate-100;
   font-feature-settings: 'cv02', 'cv03', 'cv04';
   min-height: 100dvh;
+  overflow-x: clip;
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
 }

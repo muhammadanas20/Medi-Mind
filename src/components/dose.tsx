@@ -47,14 +47,14 @@ export function DoseRow({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'flex items-center gap-3 rounded-2xl border border-transparent p-3 transition-colors',
+        'flex items-center gap-2.5 rounded-2xl border border-transparent p-2.5 transition-colors sm:gap-3 sm:p-3',
         log.status === 'taken' && 'opacity-70',
         available && 'border-brand-500/25 bg-brand-500/[0.06]',
       )}
       data-testid={`dose-${instance.slot}-${instance.medicationName}`}
     >
       <div
-        className="flex size-11 shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-white shadow-md"
+        className="flex size-10 shrink-0 items-center justify-center rounded-2xl text-base font-bold text-white shadow-md sm:size-11 sm:text-lg"
         style={{ background: instance.color }}
       >
         {instance.medicationName.slice(0, 1).toUpperCase()}
@@ -84,17 +84,20 @@ export function DoseRow({
         compact ? (
           <Badge tone="brand">{formatTime(instance.windowStart)}</Badge>
         ) : (
-          <div className="relative flex shrink-0 items-center gap-1.5">
+          <div className="relative flex shrink-0 items-center gap-1 sm:gap-1.5">
             <Button
               size="sm"
               variant="subtle"
+              className="px-3 sm:px-3.5"
               onClick={async () => {
                 await markTaken(log.id)
                 showToast(`${instance.medicationName} marked as taken`, 'success')
               }}
               data-testid="dose-taken"
             >
-              <Check /> Take
+              <Check />
+              {/* label hidden on the narrowest phones so the row still fits */}
+              <span className="hidden min-[400px]:inline">Take</span>
             </Button>
             <Button size="iconsm" variant="ghost" aria-label="Snooze" onClick={() => setSnoozeOpen((v) => !v)}>
               <AlarmClock />
@@ -180,7 +183,7 @@ export function DueStack() {
     <AnimatePresence>
       {current && (
         <motion.div
-          className="fixed inset-0 z-[55] flex items-end justify-center p-4 sm:items-center"
+          className="fixed inset-0 z-[55] flex items-end justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center sm:p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -192,7 +195,7 @@ export function DueStack() {
             animate={{ y: 0, scale: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="glass-strong relative w-full max-w-sm overflow-hidden rounded-[28px] p-6 text-center"
+            className="glass-strong relative w-full max-w-sm overflow-hidden rounded-[28px] p-5 text-center sm:p-6"
             data-testid="due-card"
           >
             <div
