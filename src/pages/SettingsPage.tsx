@@ -2,12 +2,12 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Bell, BellRing, BrainCircuit, Check, Clock, Download, KeyRound,
-  Loader2, Lock, LockOpen, Moon, Pencil, Plus, Sun, TestTubeDiagonal, Trash2, Type, Upload, UserPlus, Users, Vibrate, Waves,
+  Lock, LockOpen, Moon, Pencil, Plus, Sun, TestTubeDiagonal, Trash2, Type, Upload, UserPlus, Users, Vibrate, Waves,
 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { InstallAppSection } from '../components/install'
 import { draftFromProfile, emptyProfileDraft, parseProfileDraft, ProfileFields, type ProfileDraft } from '../components/profile-form'
-import { Badge, Button, Card, Dialog, Field, Input, SectionTitle, Select, Switch } from '../components/ui'
+import { Badge, Button, Card, Dialog, DotsLoader, Field, Input, SectionTitle, Select, Switch } from '../components/ui'
 import { disablePasscodeLock, enablePasscodeLock } from '../lib/crypto'
 import {
   listProviders, removeProvider, setActiveProvider, testProvider, upsertProvider,
@@ -311,10 +311,10 @@ function AiSection() {
           <Field label="Vision model"><Input value={model} onChange={(e) => setModel(e.target.value)} placeholder={preset.defaultModel} /></Field>
           <div className="flex justify-end gap-2">
             <Button variant="outline" disabled={busy !== null} onClick={() => void save(true)}>
-              {busy === 'test' ? <Loader2 className="animate-spin" /> : <TestTubeDiagonal />} Test
+              {busy === 'test' ? <DotsLoader size="sm" /> : <TestTubeDiagonal />} Test
             </Button>
             <Button disabled={busy !== null} onClick={() => void save(false)}>
-              {busy === 'save' ? <Loader2 className="animate-spin" /> : <Check />} Save
+              {busy === 'save' ? <DotsLoader size="sm" /> : <Check />} Save
             </Button>
           </div>
         </div>

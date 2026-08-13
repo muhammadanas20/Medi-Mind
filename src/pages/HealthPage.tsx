@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Activity, ArrowLeft, BadgeCheck, BrainCircuit, CalendarRange, Camera, CircleAlert,
-  Loader2, PenLine, Plus, Settings2, ShieldCheck, Sparkles, Trash2,
+  PenLine, Plus, Settings2, ShieldCheck, Trash2,
   TrendingDown, TrendingUp, Minus,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
@@ -10,7 +10,7 @@ import { extractVitalReading } from '../ai/service'
 import { coerceSugarContext } from '../ai/extract'
 import { CameraCapture } from '../components/camera'
 import { Sparkline, VitalTrendChart, type VitalPoint } from '../components/charts'
-import { Badge, Button, Card, Dialog, Field, Input, Select, SectionTitle, Switch, Textarea } from '../components/ui'
+import { AIScanLoader, Badge, Button, Card, Dialog, Field, Input, Select, SectionTitle, Switch, Textarea } from '../components/ui'
 import { db, uid } from '../lib/db'
 import { prepareForAI, prepareForOCR } from '../lib/image'
 import { runOCR } from '../lib/ocr'
@@ -298,14 +298,8 @@ export function HealthPage() {
           <motion.div key="proc" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <Card className="flex flex-col items-center gap-5 py-12">
               {imageUrl && <img src={imageUrl} alt="Device screen" className="max-h-56 rounded-2xl border border-white/10 object-contain" />}
-              <div className="relative">
-                <div className="flex size-16 items-center justify-center rounded-3xl bg-gradient-to-br from-brand-500 to-accent-600 text-white shadow-xl">
-                  <Sparkles className="size-7 animate-pulse" />
-                </div>
-                <Loader2 className="absolute -right-2 -top-2 size-6 animate-spin text-brand-500" />
-              </div>
-              <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">{progress}</p>
-              <p className="-mt-2 max-w-80 text-center text-xs text-slate-400">
+              <AIScanLoader progress={progress} />
+              <p className="max-w-80 text-center text-xs text-slate-400">
                 The AI is only reading the display. Nothing is saved until you confirm it.
               </p>
             </Card>
