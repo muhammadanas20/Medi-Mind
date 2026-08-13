@@ -3,7 +3,7 @@ import { ArrowRight, BadgeCheck, BellRing, BrainCircuit, LockKeyhole, ScanLine, 
 import { useState } from 'react'
 import { Button, Card, Field, Input } from '../components/ui'
 import { requestNotificationPermission } from '../lib/notifications'
-import { saveSettings, uid } from '../lib/db'
+import { db, saveSettings, uid } from '../lib/db'
 import { seedDemoData } from '../lib/seed'
 import type { Profile } from '../lib/types'
 import { useSetActiveProfile } from '../state/hooks'
@@ -33,7 +33,6 @@ export function Onboarding({ done }: { done: () => void }) {
       relation: 'Self',
       createdAt: new Date().toISOString(),
     }
-    const { db } = await import('../lib/db')
     await db.profiles.add(p)
     return p
   }
@@ -194,7 +193,6 @@ export function Onboarding({ done }: { done: () => void }) {
                   data-testid="onb-finish"
                   onClick={async () => {
                     // profile was created in step 1 — find it
-                    const { db } = await import('../lib/db')
                     const profiles = await db.profiles.toArray()
                     await finish(profiles[profiles.length - 1]?.id)
                   }}
