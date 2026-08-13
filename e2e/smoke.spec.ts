@@ -79,10 +79,8 @@ test('route navigation: every page opens with content (no blank pages)', async (
   await expect(page.getByTestId('add-med')).toBeVisible()
   await expect(page).toHaveURL(/#\/meds$/)
 
-  // Scan (lazy, camera page). NOTE: `nav-scan` exists twice in the DOM — the
-  // desktop side rail and the mobile FAB — so scope to the first (side rail);
-  // the desktop viewport used here renders both.
-  await page.getByTestId('nav-scan').first().click()
+  // Scan (lazy, camera page). nav-* test IDs are only on the visible nav.
+  await page.getByTestId('nav-scan').click()
   await expect(page.getByRole('heading', { level: 1, name: /scan prescription/i })).toBeVisible()
   await expect(page.getByText(/AI extracts — you confirm/i)).toBeVisible()
 
@@ -139,7 +137,7 @@ test('health log: opt-in BP tracking and save a manual reading', async ({ page }
 
 test('upload photo opens the file picker, not the camera', async ({ page }) => {
   await completeOnboarding(page)
-  await page.getByTestId('nav-scan').first().click()
+  await page.getByTestId('nav-scan').click()
   await expect(page.getByTestId('upload-photo')).toBeVisible()
 
   const gallery = page.getByTestId('gallery-file-input')

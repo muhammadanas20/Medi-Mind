@@ -233,7 +233,7 @@ export function HealthPage() {
   return (
     <div className="space-y-6 pb-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
             Health <span className="text-gradient">log</span>
           </h1>
@@ -243,15 +243,15 @@ export function HealthPage() {
           </p>
         </div>
         {enabled.length > 0 && stage === 'dash' && (
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => setManageOpen(true)} data-testid="manage-trackers">
-              <Settings2 /> Manage
+          <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto">
+            <Button variant="outline" className="px-2 sm:px-5" onClick={() => setManageOpen(true)} data-testid="manage-trackers">
+              <Settings2 /> <span className="truncate">Manage</span>
             </Button>
-            <Button variant="outline" onClick={() => openManual()} data-testid="log-manual">
-              <PenLine /> Log manually
+            <Button variant="outline" className="px-2 sm:px-5" onClick={() => openManual()} data-testid="log-manual">
+              <PenLine /> <span className="truncate">Log</span>
             </Button>
-            <Button onClick={() => setStage('scan')} data-testid="scan-device">
-              <Camera /> Scan device
+            <Button className="px-2 sm:px-5" onClick={() => setStage('scan')} data-testid="scan-device">
+              <Camera /> <span className="truncate">Scan</span>
             </Button>
           </div>
         )}

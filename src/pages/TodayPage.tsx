@@ -39,11 +39,6 @@ export function TodayPage() {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
             {greeting()}{profile ? `, ${profile.name.split(' ')[0]}` : ''} {profile?.avatarEmoji}
-            {profile && (profile.age != null || profile.weight != null) && (
-              <span className="ml-2 text-xs font-normal text-slate-400">
-                ({[profile.age != null ? `${profile.age} yrs` : null, profile.weight != null ? `${profile.weight} ${profile.weightUnit || 'kg'}` : null].filter(Boolean).join(' · ')})
-              </span>
-            )}
           </p>
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
             Today's <span className="text-gradient">plan</span>
@@ -68,7 +63,7 @@ export function TodayPage() {
       {nextUp && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="flex items-center gap-3 border-brand-500/20 !bg-brand-500/[0.06]">
-            <div className="flex size-10 items-center justify-center rounded-2xl bg-brand-500/15 text-brand-600 dark:text-brand-300">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-brand-500/15 text-brand-600 dark:text-brand-300">
               <CalendarClock className="size-5" />
             </div>
             <div className="min-w-0 flex-1">
@@ -80,6 +75,46 @@ export function TodayPage() {
             </div>
           </Card>
         </motion.div>
+      )}
+
+      {latestByKind.length > 0 && (
+        <Card>
+          <SectionTitle
+            right={
+              <Link to="/health" className="text-xs font-semibold text-brand-600 dark:text-brand-300">
+                Open health log →
+              </Link>
+            }
+          >
+            <span className="inline-flex items-center gap-2"><Activity className="size-5" /> Latest vitals</span>
+          </SectionTitle>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {latestByKind.map(({ tracker, reading }) => {
+              const cls = reading ? classifyReading(reading, tracker) : null
+              return (
+                <Link
+                  key={tracker.id}
+                  to="/health"
+                  className="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200/70 px-3 py-2.5 transition hover:bg-slate-200/40 dark:border-white/10 dark:hover:bg-white/[0.04]"
+                >
+                  <span className="text-xl">{VITAL_META[tracker.kind].emoji}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                      {VITAL_META[tracker.kind].label}
+                    </p>
+                    <p className="truncate text-sm font-extrabold tabular-nums">
+                      {reading ? formatReading(reading) : 'No readings yet'}
+                    </p>
+                    {reading && (
+                      <p className="text-[11px] text-slate-400">{formatReadingWhen(reading.recordedAt)}</p>
+                    )}
+                  </div>
+                  {cls && <Badge tone={cls.tone}>{cls.label}</Badge>}
+                </Link>
+              )
+            })}
+          </div>
+        </Card>
       )}
 
       {/* slot sections */}

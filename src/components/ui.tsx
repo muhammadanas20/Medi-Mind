@@ -4,6 +4,8 @@ import {
   createContext,
   forwardRef,
   useContext,
+  useEffect,
+  useId,
   type ButtonHTMLAttributes,
   type HTMLAttributes,
   type InputHTMLAttributes,
@@ -223,6 +225,22 @@ export function Dialog({
   children: ReactNode
   wide?: boolean
 }) {
+  const titleId = useId()
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prev
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open, onClose])
+
   return (
     <AnimatePresence>
       {open && (
@@ -234,6 +252,9 @@ export function Dialog({
         >
           <div className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={onClose} />
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title != null ? titleId : undefined}
             initial={{ y: 60, scale: 0.97, opacity: 0 }}
             animate={{ y: 0, scale: 1, opacity: 1 }}
             exit={{ y: 40, scale: 0.97, opacity: 0 }}
@@ -244,8 +265,12 @@ export function Dialog({
             )}
           >
             <div className="mb-4 flex items-start justify-between gap-4">
-              {title != null && <h3 className="text-lg font-bold tracking-tight">{title}</h3>}
-              <Button variant="ghost" size="iconsm" onClick={onClose} aria-label="Close">
+              {title != null && (
+                <h3 id={titleId} className="min-w-0 text-lg font-bold tracking-tight">
+                  {title}
+                </h3>
+              )}
+              <Button variant="ghost" size="iconsm" className="ml-auto shrink-0" onClick={onClose} aria-label="Close">
                 <X />
               </Button>
             </div>

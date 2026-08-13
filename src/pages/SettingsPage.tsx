@@ -6,10 +6,11 @@ import {
 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { InstallAppSection } from '../components/install'
+import { draftFromProfile, emptyProfileDraft, parseProfileDraft, ProfileFields, type ProfileDraft } from '../components/profile-form'
 import { Badge, Button, Card, Dialog, Field, Input, SectionTitle, Select, Switch } from '../components/ui'
 import { disablePasscodeLock, enablePasscodeLock } from '../lib/crypto'
 import {
-  listProviders, presetFor, removeProvider, setActiveProvider, testProvider, upsertProvider,
+  listProviders, removeProvider, setActiveProvider, testProvider, upsertProvider,
 } from '../ai/service'
 import { PROVIDER_PRESETS, type ProviderPreset } from '../ai/providers'
 import { db, uid } from '../lib/db'
@@ -19,7 +20,7 @@ import {
 import { clearAllData, seedDemoData } from '../lib/seed'
 import type { AiProviderConfig, Profile, Slot } from '../lib/types'
 import { SLOTS } from '../lib/types'
-import { atTime, SLOT_META } from '../lib/reminders'
+import { SLOT_META } from '../lib/reminders'
 import { todayStr } from '../lib/db'
 import { useActiveProfile, usePatchSettings, useProfiles, useSetActiveProfile } from '../state/hooks'
 import { useUiStore } from '../state/ui'
@@ -54,70 +55,31 @@ function ProfilesSection() {
 
   const [open, setOpen] = useState(false)
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null)
-
-  const [name, setName] = useState('')
-  const [relation, setRelation] = useState('Self')
-  const [age, setAge] = useState('')
-  const [weight, setWeight] = useState('')
-  const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg')
-  const [gender, setGender] = useState('')
-  const [emoji, setEmoji] = useState('🧓')
-  const [color, setColor] = useState('#07c5a8')
+  const [draft, setDraft] = useState<ProfileDraft>(emptyProfileDraft)
 
   const openNew = () => {
     setEditingProfile(null)
-    setName('')
-    setRelation('Self')
-    setAge('')
-    setWeight('')
-    setWeightUnit('kg')
-    setGender('')
-    setEmoji('🧓')
-    setColor('#07c5a8')
+    setDraft(emptyProfileDraft())
     setOpen(true)
   }
 
   const openEdit = (p: Profile) => {
     setEditingProfile(p)
-    setName(p.name)
-    setRelation(p.relation || 'Self')
-    setAge(p.age != null ? p.age.toString() : '')
-    setWeight(p.weight != null ? p.weight.toString() : '')
-    setWeightUnit(p.weightUnit || 'kg')
-    setGender(p.gender || '')
-    setEmoji(p.avatarEmoji || '🧓')
-    setColor(p.color || '#07c5a8')
+    setDraft(draftFromProfile(p))
     setOpen(true)
   }
 
   const save = async () => {
-    if (!name.trim()) return
-    const parsedAge = age ? parseInt(age) || undefined : undefined
-    const parsedWeight = weight ? parseFloat(weight) || undefined : undefined
+    const parsed = parseProfileDraft(draft)
+    if (!parsed.name) return
 
     if (editingProfile) {
-      await db.profiles.update(editingProfile.id, {
-        name: name.trim(),
-        relation,
-        age: parsedAge,
-        weight: parsedWeight,
-        weightUnit,
-        gender: gender || undefined,
-        avatarEmoji: emoji,
-        color,
-      })
-      showToast(`Profile “${name.trim()}” updated`, 'success')
+      await db.profiles.update(editingProfile.id, parsed)
+      showToast(`Profile “${parsed.name}” updated`, 'success')
     } else {
       const p: Profile = {
         id: uid(),
-        name: name.trim(),
-        relation,
-        age: parsedAge,
-        weight: parsedWeight,
-        weightUnit,
-        gender: gender || undefined,
-        color,
-        avatarEmoji: emoji,
+        ...parsed,
         createdAt: new Date().toISOString(),
       }
       await db.profiles.add(p)
@@ -214,123 +176,13 @@ function ProfilesSection() {
             Age and weight enable AI to evaluate medication dosages and provide tailored safety checks.
           </p>
 
-          <div className="space-y-3">
-            <Field label="Full Name">
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Grandma Rosa or John Doe"
-                data-testid="profile-name"
-                className="!h-12 !text-base"
-                autoFocus={window.matchMedia('(pointer: fine)').matches}
-              />
-            </Field>
+          <ProfileFields
+            value={draft}
+            onChange={setDraft}
+            autoFocusName={typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches}
+          />
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Relationship">
-                <Select value={relation} onChange={(e) => setRelation(e.target.value)} className="!h-12 !text-base">
-                  <option value="Self">Self (Me)</option>
-                  <option value="Parent">Parent</option>
-                  <option value="Spouse">Spouse</option>
-                  <option value="Child">Child</option>
-                  <option value="Patient">Patient</option>
-                  <option value="Other">Other</option>
-                </Select>
-              </Field>
-
-              <Field label="Gender (Optional)">
-                <Select value={gender} onChange={(e) => setGender(e.target.value)} className="!h-12 !text-base">
-                  <option value="">Unspecified</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </Select>
-              </Field>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Age (Years)" hint="For AI dose safety checks">
-                <Input
-                  type="number"
-                  inputMode="numeric"
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
-                  placeholder="e.g. 68"
-                  data-testid="profile-age"
-                  className="!h-12 !text-base"
-                />
-              </Field>
-
-              <Field label="Weight" hint="For AI health guidance">
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    inputMode="decimal"
-                    value={weight}
-                    onChange={(e) => setWeight(e.target.value)}
-                    placeholder="e.g. 70"
-                    data-testid="profile-weight"
-                    className="!h-12 !text-base min-w-0 flex-1"
-                  />
-                  <div className="flex h-12 items-center rounded-2xl border border-slate-300/70 bg-slate-200/50 p-1 dark:border-white/10 dark:bg-white/5">
-                    <button
-                      type="button"
-                      onClick={() => setWeightUnit('kg')}
-                      className={`h-full rounded-xl px-2.5 text-xs font-bold transition-all ${
-                        weightUnit === 'kg' ? 'bg-white text-brand-700 shadow-sm dark:bg-white/20 dark:text-white' : 'text-slate-500'
-                      }`}
-                    >
-                      kg
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setWeightUnit('lbs')}
-                      className={`h-full rounded-xl px-2.5 text-xs font-bold transition-all ${
-                        weightUnit === 'lbs' ? 'bg-white text-brand-700 shadow-sm dark:bg-white/20 dark:text-white' : 'text-slate-500'
-                      }`}
-                    >
-                      lbs
-                    </button>
-                  </div>
-                </div>
-              </Field>
-            </div>
-
-            <Field label="Avatar Emoji">
-              <div className="flex flex-wrap gap-2">
-                {['🧓', '👵', '👴', '🧑', '👩', '👨', '👶', '🐕'].map((e) => (
-                  <button
-                    key={e}
-                    type="button"
-                    onClick={() => setEmoji(e)}
-                    className={`flex size-11 cursor-pointer items-center justify-center rounded-2xl text-2xl transition-transform active:scale-95 ${
-                      emoji === e ? 'bg-brand-500/20 ring-2 ring-brand-500' : 'bg-slate-200/60 dark:bg-white/8'
-                    }`}
-                  >
-                    {e}
-                  </button>
-                ))}
-              </div>
-            </Field>
-
-            <Field label="Profile Color Tag">
-              <div className="flex items-center gap-2 pt-1">
-                {['#07c5a8', '#8b5cf6', '#f59e0b', '#f43f5e', '#0ea5e9'].map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setColor(c)}
-                    className={`size-9 cursor-pointer rounded-2xl transition-transform hover:scale-110 ${
-                      color === c ? 'ring-2 ring-slate-600 ring-offset-2 ring-offset-transparent scale-110' : ''
-                    }`}
-                    style={{ background: c }}
-                  />
-                ))}
-              </div>
-            </Field>
-          </div>
-
-          <Button className="w-full" size="lg" onClick={() => void save()} disabled={!name.trim()} data-testid="save-profile">
+          <Button className="w-full" size="lg" onClick={() => void save()} disabled={!draft.name.trim()} data-testid="save-profile">
             {editingProfile ? 'Save Changes' : 'Create Profile'}
           </Button>
         </div>
@@ -376,7 +228,7 @@ function AiSection() {
       }
     } catch (e) {
       if (e instanceof Error && e.message === 'LOCKED') {
-        showToast('Unlock the app first (top-right lock)', 'error')
+        showToast('Unlock the app first (lock icon in the header)', 'error')
       } else {
         showToast(e instanceof Error ? e.message.slice(0, 140) : 'Connection failed', 'error')
       }
@@ -622,7 +474,6 @@ function ExperienceSection() {
 
 function SecuritySection() {
   const settings = useUiStore((s) => s.settings)
-  const patch = usePatchSettings()
   const showToast = useUiStore((s) => s.showToast)
   const [passcode, setPasscode] = useState('')
   const [busy, setBusy] = useState(false)

@@ -27,8 +27,24 @@
     <meta property="og:description" content="Privacy-first, offline AI medication management. AI extracts — you confirm — reminders never stop until done." />
     <meta property="og:image" content="%BASE_URL%icons/icon-512.png" />
     <title>MediMind — AI Medication Manager</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('medimind.theme')
+          var dark = t === 'light'
+            ? false
+            : t === 'system'
+              ? window.matchMedia('(prefers-color-scheme: dark)').matches
+              : true
+          document.documentElement.classList.toggle('dark', dark)
+          document.documentElement.classList.toggle('boot-light', !dark)
+          if (!dark) document.documentElement.style.colorScheme = 'light'
+        } catch (e) {}
+      })()
+    </script>
     <style>
       html, body { margin: 0; background: #0b0f14; min-height: 100dvh; }
+      html.boot-light, html.boot-light body { background: #f1f5f9; }
       #boot {
         position: fixed; inset: 0; z-index: 99999;
         display: grid; place-items: center;
@@ -36,6 +52,11 @@
           radial-gradient(28rem 18rem at 50% 38%, rgb(7 197 168 / 0.14), transparent 70%),
           #0b0f14;
         transition: opacity .42s cubic-bezier(.22, 1, .36, 1);
+      }
+      html.boot-light #boot {
+        background:
+          radial-gradient(28rem 18rem at 50% 38%, rgb(7 197 168 / 0.16), transparent 70%),
+          #f1f5f9;
       }
       #boot.boot-out { opacity: 0; pointer-events: none; }
       #boot .mark {

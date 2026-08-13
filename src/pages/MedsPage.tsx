@@ -300,7 +300,7 @@ export function MedicationForm({
           <Input value={pillsRemaining} onChange={(e) => setPillsRemaining(e.target.value.replace(/\D/g, ''))} placeholder="30" inputMode="numeric" />
         </Field>
         <Field label="Color tag">
-          <div className="flex h-11 items-center gap-2">
+          <div className="flex min-h-11 flex-wrap items-center gap-2">
             {MED_COLORS.map((c) => (
               <button
                 key={c}

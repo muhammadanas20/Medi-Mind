@@ -19,6 +19,8 @@ interface UiState {
 
   locked: boolean
   setLocked: (v: boolean) => void
+  showLockScreen: boolean
+  setShowLockScreen: (v: boolean) => void
 
   toast: { id: number; message: string; kind: 'info' | 'success' | 'error' } | null
   showToast: (message: string, kind?: 'info' | 'success' | 'error') => void
@@ -26,7 +28,7 @@ interface UiState {
 
 let toastTimer: ReturnType<typeof setTimeout> | null = null
 
-export const useUiStore = create<UiState>((set, get) => ({
+export const useUiStore = create<UiState>((set) => ({
   hydrated: false,
   settings: DEFAULT_SETTINGS,
   setSettings: (settings) => {
@@ -49,7 +51,9 @@ export const useUiStore = create<UiState>((set, get) => ({
   clearDue: () => set({ dueQueue: [] }),
 
   locked: false,
-  setLocked: (locked) => set({ locked }),
+  showLockScreen: false,
+  setShowLockScreen: (showLockScreen) => set({ showLockScreen }),
+  setLocked: (locked) => set({ locked, showLockScreen: locked }),
 
   toast: null,
   showToast: (message, kind = 'info') => {
@@ -65,8 +69,14 @@ export function applyTheme(settings: AppSettings): void {
     settings.theme === 'dark' ||
     (settings.theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
   root.classList.toggle('dark', dark)
+  root.classList.toggle('boot-light', !dark)
   root.classList.toggle('text-lg-mode', settings.largeText)
   document
     .querySelector('meta[name="theme-color"]')
     ?.setAttribute('content', dark ? '#0b0f14' : '#0d9488')
+  try {
+    localStorage.setItem('medimind.theme', settings.theme)
+  } catch {
+    // private mode / blocked storage — first paint may flash, runtime theme still works
+  }
 }
