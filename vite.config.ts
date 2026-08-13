@@ -53,6 +53,19 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // long-lived vendor caches — app code ships in a small entry chunk
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-anim': ['framer-motion'],
+          'vendor-data': ['dexie', 'dexie-react-hooks', '@tanstack/react-query', 'zustand', 'zod'],
+        },
+      },
+    },
+  },
   server: {
     host: true,
     port: 5173,
