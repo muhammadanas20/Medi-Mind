@@ -4,6 +4,9 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // '/Medical-AI/' when deployed to GitHub Pages (set in the deploy workflow),
+  // '/' everywhere else (local dev, Netlify/Vercel/self-host at domain root)
+  base: process.env.VITE_BASE ?? '/',
   plugins: [
     react(),
     tailwindcss(),

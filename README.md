@@ -1,9 +1,12 @@
 # 💊 MediMind — AI-Powered Offline Medication Management
 
+[![CI](https://github.com/muhammadanas20/Medical-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/muhammadanas20/Medical-AI/actions/workflows/ci.yml)
+[![Deploy](https://github.com/muhammadanas20/Medical-AI/actions/workflows/deploy.yml/badge.svg)](https://github.com/muhammadanas20/Medical-AI/actions/workflows/deploy.yml)
+![tests](https://img.shields.io/badge/unit%20tests-39%20passing-07c5a8)
+![offline](https://img.shields.io/badge/storage-IndexedDB%20%2B%20Dexie-07c5a8)
+
 > **Privacy-first. Local-first. Human-confirmed.**
 > MediMind scans prescriptions with AI, but **never lets AI make medical decisions** — every extracted medicine must be reviewed and confirmed by a human before a single reminder exists.
-
-![stack](https://img.shields.io/badge/React_19-TypeScript-61dafb) ![offline](https://img.shields.io/badge/storage-IndexedDB%20%2B%20Dexie-07c5a8) ![ai](https://img.shields.io/badge/AI-provider--agnostic-8b5cf6)
 
 ---
 
@@ -79,6 +82,17 @@ src/
 3. **Key hygiene.** Keys encrypted at rest (AES-GCM); optional passcode locks them in memory only.
 4. **Honest pill ID.** Confidence scores + reasons ("imprint match 'ATV20'", "color matches"), never certainty.
 5. **Escalation without cruelty.** Reminders re-fire on a schedule, windows end, missed is recorded — the record is for you and your caregiver, not a guilt machine.
+
+## ⚙️ CI/CD (GitHub Actions)
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `ci.yml` | every push & PR | typecheck → 39 unit tests → PWA production build → artifact |
+| `deploy.yml` | push to `main` | builds with `VITE_BASE=/Medical-AI/` and deploys the PWA to **GitHub Pages** |
+| `dependabot.yml` | weekly | grouped npm + actions dependency PRs |
+
+To enable hosting: **Settings → Pages → Source: GitHub Actions**, then push to `main` —
+the app lands at `https://muhammadanas20.github.io/Medical-AI/` fully offline-capable (PWA).
 
 ## 🧭 Roadmap (v2)
 

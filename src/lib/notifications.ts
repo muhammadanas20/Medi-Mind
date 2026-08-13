@@ -42,6 +42,8 @@ export function buildDoseNotification(inst: DoseInstance, isRepeat: boolean): Do
   }
 }
 
+const ICON_192 = `${import.meta.env.BASE_URL}icons/icon-192.png`
+
 export async function fireNotification(n: DoseNotification): Promise<boolean> {
   if (notificationPermission() !== 'granted') return false
   try {
@@ -50,14 +52,14 @@ export async function fireNotification(n: DoseNotification): Promise<boolean> {
       await reg.showNotification(n.title, {
         body: n.body,
         tag: n.tag,
-        icon: '/icons/icon-192.png',
-        badge: '/icons/icon-192.png',
+        icon: ICON_192,
+        badge: ICON_192,
         renotify: true,
-        data: { url: '/' },
+        data: { url: import.meta.env.BASE_URL },
       } as NotificationOptions)
       return true
     }
-    new Notification(n.title, { body: n.body, tag: n.tag, icon: '/icons/icon-192.png' })
+    new Notification(n.title, { body: n.body, tag: n.tag, icon: ICON_192 })
     return true
   } catch {
     try {

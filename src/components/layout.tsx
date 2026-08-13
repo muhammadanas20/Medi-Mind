@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Bell, CalendarClock, Camera, ChartNoAxesColumn, CheckCircle2, HeartPulse,
-  Info, Moon, Pill, ScanLine, Search, Sun, TriangleAlert,
+  CalendarClock, ChartNoAxesColumn, CheckCircle2, HeartPulse,
+  Info, Moon, Pill, ScanLine, Search, Settings2, Sun, TriangleAlert,
 } from 'lucide-react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '../lib/utils'
@@ -87,9 +87,7 @@ export function AppShell() {
               </div>
             )}
             <Button variant="glass" size="icon" onClick={() => navigate('/settings')} aria-label="Settings" data-testid="open-settings">
-              <Bell className="hidden" />
-              <Sun className="hidden" />
-              <SettingsCog />
+              <Settings2 className="size-4" />
             </Button>
             <div className="lg:hidden">
               <ThemeButton />
@@ -121,7 +119,7 @@ export function AppShell() {
       </div>
 
       {/* --------------------------- mobile bottom nav ----------------------- */}
-      <nav className="glass-strong fixed inset-x-3 bottom-3 z-40 mx-auto flex max-w-md items-center justify-around rounded-[26px] px-2 py-2 lg:hidden">
+      <nav className="glass-strong fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-md items-center justify-around rounded-[26px] px-2 py-2 lg:hidden">
         {NAV.map((n) =>
           n.fab ? (
             <NavLink key={n.to} to={n.to} aria-label={n.label} data-testid="nav-scan">
@@ -169,9 +167,6 @@ export function AppShell() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* settings shortcut uses hidden icons to keep bundling obvious */}
-      <span className="hidden">{settings.theme}</span>
     </div>
   )
 
@@ -195,10 +190,13 @@ export function AppShell() {
 function Brand({ compact }: { compact?: boolean }) {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-accent-600 text-white shadow-lg shadow-brand-500/30">
-        <Camera className="hidden" />
-        <Pill className="size-5" strokeWidth={2.4} />
-      </div>
+      <picture className="block">
+        <img
+          src={`${import.meta.env.BASE_URL}icons/icon.svg`}
+          alt=""
+          className="size-10 drop-shadow-[0_6px_16px_rgb(7_197_168/0.35)]"
+        />
+      </picture>
       {!compact && (
         <span className="hidden text-lg font-extrabold tracking-tight lg:block">
           Medi<span className="text-gradient">Mind</span>
@@ -210,15 +208,6 @@ function Brand({ compact }: { compact?: boolean }) {
         </span>
       )}
     </div>
-  )
-}
-
-function SettingsCog() {
-  return (
-    <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
   )
 }
 

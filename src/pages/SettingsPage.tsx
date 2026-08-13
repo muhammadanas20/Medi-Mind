@@ -420,9 +420,12 @@ function SecuritySection() {
 
 function DataSection() {
   const showToast = useUiStore((s) => s.showToast)
+  const setActive = useSetActiveProfile()
   const fileRef = useRef<HTMLInputElement>(null)
   const [confirmWipe, setConfirmWipe] = useState(false)
   const profile = useActiveProfile()
+  const profiles = useProfiles()
+  const hasDemo = (profiles ?? []).some((p) => p.name === 'Demo Patient')
 
   const exportJson = async () => {
     const data = {
@@ -470,8 +473,15 @@ function DataSection() {
         <Button variant="outline" onClick={() => void exportJson()}><Download /> Export backup</Button>
         <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload /> Import backup</Button>
         <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={(e) => e.target.files?.[0] && void importJson(e.target.files[0])} />
-        {!profile && (
-          <Button variant="subtle" onClick={async () => { await seedDemoData().then((p) => import('./../state/ui').then(() => undefined)); location.reload() }}>
+        {!profile && !hasDemo && (
+          <Button
+            variant="subtle"
+            onClick={async () => {
+              const p = await seedDemoData()
+              await setActive(p.id)
+              showToast('Demo patient loaded with a week of history', 'success')
+            }}
+          >
             🎭 Load demo data
           </Button>
         )}
@@ -482,7 +492,7 @@ function DataSection() {
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
             <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl bg-danger-500/10 p-3 text-sm">
               <span>This deletes all profiles, medicines, dose history, scans and keys from this device.</span>
-              <Button size="sm" variant="danger" data-testid="confirm-wipe" onClick={async () => { await clearAllData(); showToast('All local data erased'); setConfirmWipe(false); location.reload() }}>
+              <Button size="sm" variant="danger" data-testid="confirm-wipe" onClick={async () => { await clearAllData(); showToast('All local data erased'); setConfirmWipe(false) }}>
                 Yes, erase
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setConfirmWipe(false)}>Cancel</Button>
