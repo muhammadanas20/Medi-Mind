@@ -28,7 +28,7 @@ export function SettingsPage() {
   return (
     <div className="space-y-5 pb-8">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight">Settings</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Settings</h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Everything is stored locally on this device. AI keys are encrypted at rest.
         </p>
@@ -316,21 +316,22 @@ function RemindersSection() {
           return (
             <div key={slot} className="flex items-center gap-3 rounded-2xl border border-slate-300/50 p-3 dark:border-white/10">
               <span className="text-xl">{SLOT_META[slot].emoji}</span>
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold">{SLOT_META[slot].label}</p>
-                <div className="mt-1 flex items-center gap-1.5 text-xs">
+                {/* Wraps below the label on very narrow screens instead of overflowing */}
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
                   <input
                     type="time"
                     value={w.start}
                     onChange={(e) => setWindow(slot, 'start', e.target.value)}
-                    className="rounded-lg border border-slate-300/60 bg-white/60 px-2 py-1 font-semibold dark:border-white/10 dark:bg-white/5"
+                    className="min-w-[5.25rem] flex-1 rounded-lg border border-slate-300/60 bg-white/60 px-2 py-1 font-semibold sm:flex-none dark:border-white/10 dark:bg-white/5"
                   />
                   <span className="text-slate-400">→</span>
                   <input
                     type="time"
                     value={w.end}
                     onChange={(e) => setWindow(slot, 'end', e.target.value)}
-                    className="rounded-lg border border-slate-300/60 bg-white/60 px-2 py-1 font-semibold dark:border-white/10 dark:bg-white/5"
+                    className="min-w-[5.25rem] flex-1 rounded-lg border border-slate-300/60 bg-white/60 px-2 py-1 font-semibold sm:flex-none dark:border-white/10 dark:bg-white/5"
                   />
                 </div>
               </div>
@@ -440,7 +441,7 @@ function SecuritySection() {
       <div className="flex flex-wrap items-center gap-2">
         <Input
           type="password"
-          className="!w-48"
+          className="w-full sm:!w-48"
           placeholder={settings.lockEnabled ? 'Enter passcode to disable' : 'Choose a passcode (4+ chars)'}
           value={passcode}
           onChange={(e) => setPasscode(e.target.value)}

@@ -89,7 +89,7 @@ export function AppShell() {
   }, [location.pathname])
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-6xl">
+    <div className="mx-auto flex min-h-dvh w-full max-w-7xl">
       {/* ------------------------- desktop side rail ------------------------ */}
       <aside className="sticky top-0 hidden h-dvh w-20 flex-col items-center gap-2 py-6 lg:flex">
         <Brand />
@@ -119,14 +119,14 @@ export function AppShell() {
 
       {/* ------------------------------- main ------------------------------- */}
       <div className="flex min-w-0 flex-1 flex-col px-4 pb-28 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:pb-10 lg:pt-4">
-        <header className="mb-5 flex items-center justify-between gap-3">
+        <header className="mb-5 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <div className="flex items-center gap-3 lg:hidden">
             <Brand compact />
           </div>
           {/* profile switcher */}
           <div className="ml-auto flex items-center gap-2">
             {profiles && profiles.length > 1 && active && (
-              <div className="glass flex items-center gap-1 rounded-2xl p-1">
+              <div className="glass no-scrollbar flex max-w-[52vw] items-center gap-1 overflow-x-auto rounded-2xl p-1 sm:max-w-none">
                 {profiles.map((p) => (
                   <button
                     key={p.id}
@@ -158,7 +158,7 @@ export function AppShell() {
 
         <InstallAppBanner />
 
-        <main className="min-w-0 flex-1">
+        <main className="w-full min-w-0 flex-1">
           {/* Route transitions. We pass the *current* location explicitly to
               <Routes> and key the wrapper by pathname so AnimatePresence can
               keep the outgoing page mounted (showing its own content) while the
@@ -200,13 +200,13 @@ export function AppShell() {
       </div>
 
       {/* --------------------------- mobile bottom nav ----------------------- */}
-      <nav className="glass-strong fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-md items-center justify-around rounded-[26px] px-2 py-2 lg:hidden">
+      <nav className="glass-strong fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-md items-center justify-around rounded-[26px] px-1.5 py-2 sm:px-2 lg:hidden">
         {MOBILE_NAV.map((n) =>
           n.fab ? (
             <NavLink key={n.to} to={n.to} aria-label={n.label} data-testid="nav-scan">
               <motion.div
                 whileTap={{ scale: 0.9 }}
-                className="animate-pulse-ring -mt-8 flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-xl shadow-brand-500/40"
+                className="animate-pulse-ring -mt-7 flex size-13 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-xl shadow-brand-500/40 sm:-mt-8 sm:size-14"
               >
                 <n.icon className="size-6" strokeWidth={2.4} />
               </motion.div>
@@ -220,7 +220,7 @@ export function AppShell() {
               data-testid={`nav-${n.label.toLowerCase().replace(' ', '-')}`}
               className={({ isActive }) =>
                 cn(
-                  'flex flex-col items-center gap-0.5 rounded-2xl px-3 py-1.5 text-[10px] font-semibold transition-colors',
+                  'flex min-w-0 flex-col items-center gap-0.5 whitespace-nowrap rounded-2xl px-2 py-1.5 text-[10px] font-semibold transition-colors sm:px-3',
                   isActive ? 'text-brand-600 dark:text-brand-300' : 'text-slate-400 dark:text-slate-500',
                 )
               }
@@ -240,7 +240,7 @@ export function AppShell() {
             initial={{ opacity: 0, y: -16, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10 }}
-            className="glass-strong fixed left-1/2 top-4 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium"
+            className="glass-strong fixed left-1/2 top-[max(1rem,env(safe-area-inset-top))] z-[60] flex w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium"
           >
             {toast.kind === 'success' && <CheckCircle2 className="size-4 text-emerald-500" />}
             {toast.kind === 'error' && <TriangleAlert className="size-4 text-danger-500" />}

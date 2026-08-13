@@ -48,13 +48,14 @@ export function InsightsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight">Insights</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Insights</h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Adherence trends for {profile?.name ?? 'you'} over the last 7 days
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      {/* 3-up only once there is genuine room for ring + text; stacked below */}
+      <div className="grid gap-4 md:grid-cols-3">
         <Card className="flex items-center gap-4">
           <Ring pct={overall?.pct ?? 0} size={88} stroke={9}>
             <span className="text-xl font-extrabold tabular-nums">{overall?.pct ?? '–'}</span>

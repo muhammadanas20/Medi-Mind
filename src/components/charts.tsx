@@ -13,7 +13,7 @@ export function WeeklyBars({ days, className }: { days: DayStat[]; className?: s
         const none = d.total === 0
         return (
           <div key={d.date || i} className="flex flex-1 flex-col items-center gap-1.5">
-            <div className="flex h-24 w-full max-w-9 items-end justify-center rounded-xl bg-slate-200/60 p-0.5 dark:bg-white/5">
+            <div className="flex h-20 w-full max-w-9 items-end justify-center rounded-xl bg-slate-200/60 p-0.5 sm:h-24 dark:bg-white/5">
               <motion.div
                 initial={{ height: 0 }}
                 animate={{ height: `${none ? 0 : Math.max(6, pct)}%` }}
