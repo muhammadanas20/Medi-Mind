@@ -59,7 +59,7 @@ Button.displayName = 'Button'
 /* ---------------------------------- Card --------------------------------- */
 
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('glass rounded-3xl p-5', className)} {...props} />
+  return <div className={cn('glass min-w-0 rounded-3xl p-4 sm:p-5', className)} {...props} />
 }
 
 export function SectionTitle({
@@ -72,8 +72,8 @@ export function SectionTitle({
   className?: string
 }) {
   return (
-    <div className={cn('mb-4 flex items-center justify-between', className)}>
-      <h2 className="text-lg font-bold tracking-tight">{children}</h2>
+    <div className={cn('mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2', className)}>
+      <h2 className="min-w-0 text-lg font-bold tracking-tight">{children}</h2>
       {right}
     </div>
   )
@@ -218,7 +218,7 @@ export function Dialog({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-end justify-center p-3 sm:items-center sm:p-6"
+          className="fixed inset-0 z-50 flex items-end justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:items-center sm:p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -230,7 +230,7 @@ export function Dialog({
             exit={{ y: 40, scale: 0.97, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 380, damping: 34 }}
             className={cn(
-              'glass-strong relative max-h-[88dvh] w-full overflow-y-auto rounded-3xl p-6',
+              'glass-strong relative max-h-[88dvh] w-full min-w-0 overflow-y-auto overscroll-contain rounded-3xl p-5 sm:p-6',
               wide ? 'max-w-2xl' : 'max-w-md',
             )}
           >

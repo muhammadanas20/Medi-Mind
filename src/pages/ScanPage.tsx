@@ -142,9 +142,9 @@ export function ScanPage() {
 
   return (
     <div className="space-y-6 pb-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
             Scan <span className="text-gradient">prescription</span>
           </h1>
           <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
@@ -166,7 +166,7 @@ export function ScanPage() {
               onCapture={(b) => void onCapture(b)}
               overlayHint="Fit the whole prescription inside the frame"
             />
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
               {[
                 { icon: ScanLine, t: '1 · Scan', d: 'Camera or upload — image is processed on your terms' },
                 { icon: BrainCircuit, t: '2 · Extract', d: 'AI structures medicines into reviewable cards' },

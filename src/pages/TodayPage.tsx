@@ -32,7 +32,7 @@ export function TodayPage() {
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
             {greeting()}{profile ? `, ${profile.name.split(' ')[0]}` : ''} {profile?.avatarEmoji}
           </p>
-          <h1 className="text-3xl font-extrabold tracking-tight">
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
             Today's <span className="text-gradient">plan</span>
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -110,7 +110,7 @@ export function TodayPage() {
               Scan a prescription or add a medicine manually to build your plan.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             <Link to="/scan">
               <motion.span className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/25">
                 <ScanLine className="size-4" /> Scan prescription
