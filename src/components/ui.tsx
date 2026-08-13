@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
+import { createPortal } from 'react-dom'
 import {
   createContext,
   forwardRef,
@@ -241,7 +242,13 @@ export function Dialog({
     }
   }, [open, onClose])
 
-  return (
+  // Render into a portal on <body>. The Dialog is always a `position: fixed`
+  // overlay, but it is usually mounted inside a `Card` that applies
+  // `backdrop-filter` (the `glass` utility). A non-`none` `backdrop-filter`
+  // establishes a containing block for `position: fixed` descendants, which
+  // traps the overlay inside the card and pushes it off-screen. Portaling to
+  // <body> sidesteps that so the overlay always fills the viewport.
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
@@ -278,7 +285,8 @@ export function Dialog({
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   )
 }
 
