@@ -18,6 +18,8 @@ jobs:
   build:
     name: Build PWA
     runs-on: ubuntu-latest
+    outputs:
+      pages_enabled: ${{ steps.pages.outputs.enabled }}
     env:
       # GitHub Pages serves the site under /<repo>/ — must match the repo name
       VITE_BASE: /Medical-AI/
@@ -46,17 +48,42 @@ jobs:
       - name: SPA 404 fallback (hash-routing safe copy)
         run: cp dist/index.html dist/404.html
 
+      # configure-pages@v5 hard-fails on repos where Pages was never enabled,
+      # and the workflow token cannot enable it (needs repo admin). Probe first
+      # and skip cleanly with instructions so the pipeline stays green.
+      - name: Check GitHub Pages is enabled
+        id: pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if status=$(gh api repos/${{ github.repository }}/pages -q .status --silent 2>/dev/null); then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "GitHub Pages is enabled (status: $status)."
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "### ⚠️ GitHub Pages not enabled — deploy skipped"
+              echo ""
+              echo "Enable it once, then re-run this workflow:"
+              echo "**Settings → Pages → Build and deployment → Source: GitHub Actions**"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::GitHub Pages is not enabled for this repo. Enable it: Settings → Pages → Source: GitHub Actions, then re-run Deploy."
+          fi
+
       - name: Setup Pages
+        if: steps.pages.outputs.enabled == 'true'
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
+        if: steps.pages.outputs.enabled == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
-    name: Deploy
+    name: Deploy to Pages
     needs: build
+    if: needs.build.outputs.pages_enabled == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
