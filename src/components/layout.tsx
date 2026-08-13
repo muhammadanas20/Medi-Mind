@@ -1,9 +1,9 @@
+import { lazy, Suspense, useEffect, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   CalendarClock, ChartNoAxesColumn, CheckCircle2, HeartPulse,
   Info, Moon, Pill, ScanLine, Search, Settings2, Sun, TriangleAlert,
 } from 'lucide-react'
-import { lazy, Suspense, type ReactNode } from 'react'
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '../lib/utils'
 import { useUiStore } from '../state/ui'
@@ -29,6 +29,17 @@ const NAV = [
   { to: '/insights', label: 'Insights', icon: ChartNoAxesColumn },
 ]
 
+// Per-route document title (also what the installed PWA shows in the task switcher).
+const ROUTE_TITLES: Record<string, string> = {
+  '/': "Today's plan",
+  '/meds': 'Medications',
+  '/scan': 'Scan prescription',
+  '/pill-id': 'Pill identifier',
+  '/insights': 'Insights',
+  '/settings': 'Settings',
+}
+const BASE_TITLE = 'MediMind — AI Medication Manager'
+
 function LazyPage({ children }: { children: ReactNode }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>
 }
@@ -53,6 +64,14 @@ export function AppShell() {
   const profiles = useProfiles()
   const active = useActiveProfile()
   const setActive = useSetActiveProfile()
+
+  // With hash routing the browser never scrolls back to the top on its own, so
+  // a long page (Settings, Insights…) keeps the previous page's scroll offset
+  // after navigation. Reset it whenever the route changes.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+    document.title = ROUTE_TITLES[location.pathname] ? `${ROUTE_TITLES[location.pathname]} · MediMind` : BASE_TITLE
+  }, [location.pathname])
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-6xl">
@@ -129,8 +148,9 @@ export function AppShell() {
               <Routes> and key the wrapper by pathname so AnimatePresence can
               keep the outgoing page mounted (showing its own content) while the
               incoming page animates in. The previous pattern keyed an <Outlet/>
-              here, which made the exiting node render the *new* route and could
-              leave the viewport blank on navigation (e.g. Settings not opening). */}
+              here, which made the exiting node render the *new* route instead
+              and could leave the viewport blank on navigation (e.g. tapping
+              Settings did nothing visible). */}
           <ErrorBoundary>
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
