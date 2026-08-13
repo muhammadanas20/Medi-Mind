@@ -5,7 +5,9 @@ import {
 } from 'lucide-react'
 import type { HealthReport, HealthSuggestion, Stability } from '../lib/health-report'
 import { reportToneGradient } from '../lib/health-report'
+import type { VitalKind } from '../lib/types'
 import { VITAL_META } from '../lib/vitals'
+import { VitalIcon } from './icons'
 import { Badge, Button, Card } from './ui'
 
 const ICONS: Record<HealthSuggestion['icon'], typeof Footprints> = {
@@ -36,7 +38,7 @@ export function HealthReportCard({
       <div className={`pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b ${reportToneGradient(tone)}`} />
       <div className="relative space-y-4">
         <div className="flex items-start gap-3">
-          <StatusOrb tone={tone} urgent={report.urgent} emoji={meta.emoji} />
+          <StatusOrb tone={tone} urgent={report.urgent} kind={report.kind} />
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
               {meta.label} check
@@ -101,15 +103,15 @@ export function HealthReportCard({
   )
 }
 
-function StatusOrb({ tone, urgent, emoji }: { tone: HealthReport['cls']['tone']; urgent: boolean; emoji: string }) {
+function StatusOrb({ tone, urgent, kind }: { tone: HealthReport['cls']['tone']; urgent: boolean; kind: VitalKind }) {
   const ring =
     tone === 'success' ? 'from-emerald-400 to-brand-500'
     : tone === 'warn' ? 'from-amber-400 to-orange-500'
     : tone === 'danger' ? 'from-rose-500 to-red-600'
     : 'from-slate-400 to-slate-500'
   return (
-    <div className={`relative flex size-16 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br ${ring} text-3xl shadow-lg ${urgent ? 'animate-pulse' : ''}`}>
-      <span className="drop-shadow">{emoji}</span>
+    <div className={`relative flex size-16 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br ${ring} shadow-lg ${urgent ? 'animate-pulse' : ''}`}>
+      <VitalIcon kind={kind} colored={false} className="size-7 text-white drop-shadow" />
     </div>
   )
 }

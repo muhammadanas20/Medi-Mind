@@ -3,9 +3,10 @@ import { Activity, Flame, History, TrendingUp } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { MedicationBars, Sparkline, WeeklyBars } from '../components/charts'
+import { SlotIcon, VitalIcon } from '../components/icons'
 import { Badge, Card, Ring, SectionTitle } from '../components/ui'
 import { todayStr } from '../lib/db'
-import { adherenceSeries, overallAdherence, SLOT_META } from '../lib/reminders'
+import { adherenceSeries, overallAdherence } from '../lib/reminders'
 import { formatTime } from '../lib/reminders'
 import { classifyReading, formatReading, sparkValues, VITAL_META } from '../lib/vitals'
 import { useActiveProfile, useHealthTrackers, useRecentLogs, useVitalReadings } from '../state/hooks'
@@ -124,7 +125,7 @@ export function InsightsPage() {
                   to="/health"
                   className="flex items-center gap-3 rounded-2xl border border-slate-200/70 px-3 py-2.5 transition hover:bg-slate-200/40 dark:border-white/10 dark:hover:bg-white/[0.04]"
                 >
-                  <span className="text-xl">{VITAL_META[t.kind].emoji}</span>
+                  <VitalIcon kind={t.kind} className="size-6" />
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{VITAL_META[t.kind].label}</p>
                     <p className="text-sm font-extrabold tabular-nums">{latest ? formatReading(latest) : 'No readings'}</p>
@@ -148,7 +149,7 @@ export function InsightsPage() {
           )}
           {timeline.map((l) => (
             <div key={l.id} className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-slate-200/40 dark:hover:bg-white/[0.04]">
-              <span className="text-lg">{SLOT_META[l.slot].emoji}</span>
+              <SlotIcon slot={l.slot} className="size-5" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">
                   {l.medicationName}

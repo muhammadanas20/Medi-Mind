@@ -324,7 +324,7 @@ export function Ring({
           strokeDasharray={c}
           initial={{ strokeDashoffset: c }}
           animate={{ strokeDashoffset: c - (c * Math.min(100, Math.max(0, pct))) / 100 }}
-          transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         />
         <defs>
           <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -338,9 +338,7 @@ export function Ring({
   )
 }
 
-/* --------------------------------- Toasts --------------------------------- */
-
-const toneToBadge = { info: 'neutral', success: 'success', error: 'danger' } as const
+/* --------------------------------- Misc ---------------------------------- */
 
 export function ToneDot({ tone, className }: { tone: 'brand' | 'warn' | 'danger' | 'success' | 'accent'; className?: string }) {
   return (
@@ -354,10 +352,9 @@ export function ToneDot({ tone, className }: { tone: 'brand' | 'warn' | 'danger'
         tone === 'success' && 'bg-emerald-500',
         className,
       )}
-    />
+      />
   )
 }
-void toneToBadge
 
 /* ------------------------------ Modern Loaders ---------------------------- */
 

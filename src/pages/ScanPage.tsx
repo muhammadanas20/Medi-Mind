@@ -3,10 +3,13 @@ import {
   Activity, ArrowLeft, ArrowRight, BadgeCheck, BrainCircuit, CalendarDays, CircleAlert,
   FlaskConical, PenLine, ScanLine, Search, ShieldCheck, Stethoscope, Trash2,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CameraCapture } from '../components/camera'
+import { SlotIcon } from '../components/icons'
 import { AIScanLoader, Badge, Button, Card, Field, Input, Select, Textarea } from '../components/ui'
+import { SLOT_META } from '../lib/reminders'
+import { SLOTS, type Slot } from '../lib/types'
 import { extractPrescription } from '../ai/service'
 import { parseDurationDays, foodFromText } from '../ai/extract'
 import { db, todayStr, uid } from '../lib/db'
@@ -42,11 +45,8 @@ export function ScanPage() {
       return URL.createObjectURL(blob)
     })
     setStage('processing')
-    aiRef.current?.abort?.()
     void processImage(blob)
   }
-
-  const aiRef = useMemo(() => ({ current: null as { abort?: () => void } | null }), [])
 
   /** The pipeline: AI vision → zod parse → review. OCR fallback always offered. */
   const processImage = async (blob: Blob) => {
@@ -402,20 +402,14 @@ function MedicineReviewCard({
   onChange: (m: ExtractedMedicine) => void
   onRemove: () => void
 }) {
-  const dose = (key: 'morning' | 'afternoon' | 'evening' | 'night', delta: number) => {
+  const dose = (key: Slot, delta: number) => {
     onChange({ ...med, [key]: Math.max(0, Math.min(6, (med[key] ?? 0) + delta)) })
   }
-  const dots: { key: 'morning' | 'afternoon' | 'evening' | 'night'; emoji: string; label: string }[] = [
-    { key: 'morning', emoji: '🌅', label: 'Morning' },
-    { key: 'afternoon', emoji: '☀️', label: 'Afternoon' },
-    { key: 'evening', emoji: '🌇', label: 'Evening' },
-    { key: 'night', emoji: '🌙', label: 'Night' },
-  ]
   const color = MED_COLORS[index % MED_COLORS.length]
   const hasName = med.medicine.trim().length > 0
 
   return (
-    <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, ease: 'easeOut' }}>
       <Card className={`relative overflow-hidden ${hasName ? '' : 'border-warn-500/40'}`}>
         <div className="absolute inset-y-0 left-0 w-1" style={{ background: color }} />
         <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
@@ -453,21 +447,21 @@ function MedicineReviewCard({
           </Button>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
-          {dots.map((d) => (
+          {SLOTS.map((slot) => (
             <div
-              key={d.key}
+              key={slot}
               className={
-                (med[d.key] ?? 0) > 0
+                (med[slot] ?? 0) > 0
                   ? 'flex items-center gap-2 rounded-2xl border border-brand-500/40 bg-brand-500/[0.08] px-3 py-1.5'
                   : 'flex items-center gap-2 rounded-2xl border border-slate-300/50 px-3 py-1.5 dark:border-white/10'
               }
             >
-              <span className="text-sm">{d.emoji}</span>
-              <span className="text-xs font-semibold">{d.label}</span>
+              <SlotIcon slot={slot} className="size-4" />
+              <span className="text-xs font-semibold">{SLOT_META[slot].label}</span>
               <div className="flex items-center gap-1.5">
-                <button aria-label={`less ${d.key}`} className="flex size-6 cursor-pointer items-center justify-center rounded-full bg-slate-300/60 text-xs font-bold dark:bg-white/10" onClick={() => dose(d.key, -1)}>−</button>
-                <span className="w-4 text-center text-sm font-extrabold tabular-nums">{med[d.key] ?? 0}</span>
-                <button aria-label={`more ${d.key}`} className="flex size-6 cursor-pointer items-center justify-center rounded-full bg-brand-500/20 text-xs font-bold text-brand-700 dark:text-brand-300" onClick={() => dose(d.key, 1)}>+</button>
+                <button aria-label={`less ${slot}`} className="flex size-6 cursor-pointer items-center justify-center rounded-full bg-slate-300/60 text-xs font-bold dark:bg-white/10" onClick={() => dose(slot, -1)}>−</button>
+                <span className="w-4 text-center text-sm font-extrabold tabular-nums">{med[slot] ?? 0}</span>
+                <button aria-label={`more ${slot}`} className="flex size-6 cursor-pointer items-center justify-center rounded-full bg-brand-500/20 text-xs font-bold text-brand-700 dark:text-brand-300" onClick={() => dose(slot, 1)}>+</button>
               </div>
             </div>
           ))}

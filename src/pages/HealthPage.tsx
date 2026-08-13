@@ -10,6 +10,7 @@ import { extractVitalReading } from '../ai/service'
 import { coerceSugarContext } from '../ai/extract'
 import { CameraCapture } from '../components/camera'
 import { Sparkline, VitalTrendChart, type VitalPoint } from '../components/charts'
+import { VitalIcon } from '../components/icons'
 import { AIScanLoader, Badge, Button, Card, Dialog, Field, Input, Select, SectionTitle, Switch, Textarea } from '../components/ui'
 import { db, uid } from '../lib/db'
 import { prepareForAI, prepareForOCR } from '../lib/image'
@@ -442,7 +443,10 @@ export function HealthPage() {
                         </div>
                       }
                     >
-                      {VITAL_META[chartKind].emoji} {VITAL_META[chartKind].label} · last {period === 90 ? '3 months' : `${period} days`}
+                      <span className="inline-flex items-center gap-2">
+                        <VitalIcon kind={chartKind} className="size-5" />
+                        {VITAL_META[chartKind].label} · last {period === 90 ? '3 months' : `${period} days`}
+                      </span>
                     </SectionTitle>
                     <VitalTrendChart
                       points={chartPoints}
@@ -481,7 +485,7 @@ export function HealthPage() {
                           onClick={() => setEditing(r)}
                           className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-slate-200/40 dark:hover:bg-white/[0.04]"
                         >
-                          <span className="text-lg">{VITAL_META[r.kind].emoji}</span>
+                          <VitalIcon kind={r.kind} className="size-5" />
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-semibold">
                               {formatReading(r)}
@@ -617,7 +621,12 @@ function OptInGallery({
           return (
             <Card key={kind} className="flex flex-col gap-4">
               <div className="flex items-start gap-3">
-                <span className="text-3xl">{m.emoji}</span>
+                <span
+                  className="flex size-12 shrink-0 items-center justify-center rounded-2xl"
+                  style={{ background: `${m.color}1f` }}
+                >
+                  <VitalIcon kind={kind} className="size-6" />
+                </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-lg font-extrabold">{m.label}</h2>
@@ -646,7 +655,7 @@ function OptInGallery({
             const m = VITAL_META[kind]
             return (
               <div key={kind} className="flex items-center gap-3 rounded-2xl border border-slate-300/50 p-3 dark:border-white/10">
-                <span className="text-xl">{m.emoji}</span>
+                <VitalIcon kind={kind} className="size-5" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold">{m.label}</p>
                   <p className="text-[11px] text-slate-400">{m.blurb}</p>
@@ -689,7 +698,7 @@ function SummaryCard({
       <button onClick={onFocus} className="w-full cursor-pointer text-left">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-xl">{meta.emoji}</span>
+            <VitalIcon kind={tracker.kind} className="size-6" />
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{meta.label}</p>
               <p className="text-2xl font-extrabold tabular-nums">
@@ -750,7 +759,7 @@ function ReadingFields({
             }}
           >
             {VITAL_KINDS.map((k) => (
-              <option key={k} value={k}>{VITAL_META[k].emoji} {VITAL_META[k].label}</option>
+              <option key={k} value={k}>{VITAL_META[k].label}</option>
             ))}
           </Select>
         </Field>
@@ -859,7 +868,7 @@ function ManageDialog({
           return (
             <div key={kind} className="rounded-2xl border border-slate-300/50 p-3 dark:border-white/10">
               <div className="flex items-center gap-3">
-                <span className="text-xl">{m.emoji}</span>
+                <VitalIcon kind={kind} className="size-5" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold">{m.label}</p>
                   <p className="text-[11px] text-slate-400">{m.who}</p>
@@ -932,7 +941,16 @@ function ReadingDetail({
   const snap = buildHealthReport(reading, prior, tracker, profile ?? undefined)
 
   return (
-    <Dialog open onClose={onClose} title={`${meta.emoji} ${meta.label}`} wide>
+    <Dialog
+      open
+      onClose={onClose}
+      title={
+        <span className="inline-flex items-center gap-2">
+          <VitalIcon kind={reading.kind} className="size-5" /> {meta.label}
+        </span>
+      }
+      wide
+    >
       <div className="space-y-4">
         <HealthReportCard report={snap} compact />
         {url && (

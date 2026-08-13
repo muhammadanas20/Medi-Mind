@@ -2,9 +2,10 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Bell, BellRing, BrainCircuit, Check, Clock, Download, KeyRound,
-  Lock, LockOpen, Moon, Pencil, Plus, Sun, TestTubeDiagonal, Trash2, Type, Upload, UserPlus, Users, Vibrate, Waves,
+  Lock, LockOpen, Moon, Pencil, Plus, Sparkles, Sun, TestTubeDiagonal, Trash2, Type, Upload, UserPlus, Users, Vibrate, Waves,
 } from 'lucide-react'
 import { useRef, useState } from 'react'
+import { SlotIcon } from '../components/icons'
 import { InstallAppSection } from '../components/install'
 import { draftFromProfile, emptyProfileDraft, parseProfileDraft, ProfileFields, type ProfileDraft } from '../components/profile-form'
 import { Badge, Button, Card, Dialog, DotsLoader, Field, Input, SectionTitle, Select, Switch } from '../components/ui'
@@ -397,7 +398,9 @@ function RemindersSection() {
           const w = settings.reminderWindows[slot]
           return (
             <div key={slot} className="flex items-center gap-3 rounded-2xl border border-slate-300/50 p-3 dark:border-white/10">
-              <span className="text-xl">{SLOT_META[slot].emoji}</span>
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-slate-200/50 dark:bg-white/8">
+                <SlotIcon slot={slot} className="size-5" />
+              </span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold">{SLOT_META[slot].label}</p>
                 {/* Wraps below the label on very narrow screens instead of overflowing */}
@@ -506,7 +509,7 @@ function SecuritySection() {
       await enablePasscodeLock(passcode)
       setBusy(false)
       setPasscode('')
-      showToast('🔐 Passcode lock enabled — keys now need your passcode', 'success')
+      showToast('Passcode lock enabled — keys now need your passcode', 'success', 'Security on')
     }
   }
 
@@ -612,7 +615,7 @@ function DataSection() {
               showToast('Demo patient loaded with a week of history', 'success')
             }}
           >
-            🎭 Load demo data
+            <Sparkles /> Load demo data
           </Button>
         )}
         <Button variant="danger" onClick={() => setConfirmWipe(true)}><Trash2 /> Erase everything</Button>
