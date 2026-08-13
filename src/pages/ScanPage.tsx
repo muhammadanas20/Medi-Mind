@@ -55,7 +55,7 @@ export function ScanPage() {
       setProgress('Preparing image…')
       const ai = await prepareForAI(blob)
       setProgress('Reading prescription with AI…')
-      const { extraction: ex, providerLabel: pl } = await extractPrescription(ai.base64, ai.mimeType)
+      const { extraction: ex, providerLabel: pl } = await extractPrescription(ai.base64, ai.mimeType, profile ?? undefined)
       setExtraction(ex)
       setProviderLabel(pl)
       setStage('review')
@@ -250,11 +250,18 @@ export function ScanPage() {
                     </>
                   ) : (
                     <>
-                      <p className="font-bold text-accent-600 dark:text-accent-400">
-                        Extracted with {providerLabel} — review every field
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-bold text-accent-600 dark:text-accent-400">
+                          Extracted with {providerLabel} — review every field
+                        </p>
+                        {profile && (profile.age != null || profile.weight != null) && (
+                          <Badge tone="brand">
+                            {profile.name}{profile.age != null ? ` · ${profile.age} yrs` : ''}{profile.weight != null ? ` · ${profile.weight} ${profile.weightUnit || 'kg'}` : ''}
+                          </Badge>
+                        )}
+                      </div>
                       <p className="mt-0.5 text-slate-500 dark:text-slate-400">
-                        AI can misread handwriting. Tap any value to correct it before confirming.
+                        AI evaluates age & weight safety. Tap any value to correct it before confirming.
                       </p>
                     </>
                   )}

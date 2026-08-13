@@ -6,7 +6,10 @@ import {
   parseVitalExtraction,
   foodFromText,
   coerceSugarContext,
+  buildPrescriptionPrompt,
+  buildVitalPrompt,
 } from './extract'
+import type { Profile } from '../lib/types'
 
 describe('extractJsonBlock', () => {
   it('unwraps markdown fences', () => {
@@ -77,5 +80,48 @@ describe('foodFromText', () => {
     expect(foodFromText('with lunch')).toBe('with')
     expect(foodFromText(undefined, 'before')).toBe('before')
     expect(foodFromText()).toBe('any')
+  })
+})
+
+describe('buildPrescriptionPrompt with Profile Context', () => {
+  it('includes patient age and weight in prompt when profile is provided', () => {
+    const profile: Profile = {
+      id: 'p1',
+      name: 'Grandpa Joe',
+      age: 72,
+      weight: 68,
+      weightUnit: 'kg',
+      relation: 'Parent',
+      gender: 'Male',
+      color: '#07c5a8',
+      createdAt: '2026-08-13T00:00:00.000Z',
+    }
+    const prompt = buildPrescriptionPrompt(profile)
+    expect(prompt).toContain('Grandpa Joe')
+    expect(prompt).toContain('Age: 72 years old')
+    expect(prompt).toContain('Weight: 68 kg')
+    expect(prompt).toContain('CLINICAL DOSAGE CHECKING')
+  })
+
+  it('falls back to default prompt when no profile is provided', () => {
+    const prompt = buildPrescriptionPrompt(undefined)
+    expect(prompt).not.toContain('PATIENT PROFILE FOR CLINICAL DOSAGE CHECKING')
+  })
+})
+
+describe('buildVitalPrompt with Profile Context', () => {
+  it('includes age and weight in vital reading prompt', () => {
+    const profile: Profile = {
+      id: 'p1',
+      name: 'Maria',
+      age: 45,
+      weight: 62,
+      weightUnit: 'kg',
+      color: '#8b5cf6',
+      createdAt: '2026-08-13T00:00:00.000Z',
+    }
+    const prompt = buildVitalPrompt(profile)
+    expect(prompt).toContain('Age: 45 years old')
+    expect(prompt).toContain('Baseline Weight: 62 kg')
   })
 })

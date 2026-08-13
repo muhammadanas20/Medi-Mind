@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildHealthReport, inferStability } from './health-report'
-import type { VitalReading } from './types'
+import type { Profile, VitalReading } from './types'
 
 function bp(id: string, sys: number, dia: number, when: string): VitalReading {
   return {
@@ -61,6 +61,21 @@ describe('buildHealthReport', () => {
     const r = buildHealthReport(bp('c', 150, 94, '2026-08-13T07:00:00.000Z'), [])
     const blob = r.suggestions.map((s) => s.detail).join(' ')
     expect(blob.toLowerCase()).not.toMatch(/increase your dose|double|stop your tablet/)
+  })
+
+  it('accepts profile with age and weight and generates health report without errors', () => {
+    const profile: Profile = {
+      id: 'p1',
+      name: 'John',
+      age: 70,
+      weight: 75,
+      weightUnit: 'kg',
+      color: '#07c5a8',
+      createdAt: '2026-08-13T00:00:00.000Z',
+    }
+    const r = buildHealthReport(bp('c', 120, 78, '2026-08-13T07:00:00.000Z'), [], null, profile)
+    expect(r.headline).toBeTruthy()
+    expect(r.suggestions.length).toBeGreaterThan(0)
   })
 })
 

@@ -130,7 +130,7 @@ export function HealthPage() {
       setProgress('Preparing image…')
       const ai = await prepareForAI(blob)
       setProgress('Reading the device screen…')
-      const { extraction, providerLabel: pl } = await extractVitalReading(ai.base64, ai.mimeType)
+      const { extraction, providerLabel: pl } = await extractVitalReading(ai.base64, ai.mimeType, profile ?? undefined)
       setProviderLabel(pl)
       const kind = extraction.kind ?? enabled[0]?.kind ?? 'blood_pressure'
       setDraft({
@@ -208,8 +208,14 @@ export function HealthPage() {
       createdAt: new Date().toISOString(),
     }
     await db.vitalReadings.add(row)
+    if (draft.kind === 'weight' && draft.value != null) {
+      await db.profiles.update(profile.id, {
+        weight: draft.value,
+        weightUnit: (draft.unit as 'kg' | 'lbs') || profile.weightUnit || 'kg',
+      })
+    }
     const prior = (readings ?? []).filter((r) => r.kind === row.kind)
-    setReport(buildHealthReport(row, prior, tracker))
+    setReport(buildHealthReport(row, prior, tracker, profile ?? undefined))
     setManualOpen(false)
     setStage('report')
     showToast(`${VITAL_META[draft.kind].label} saved`, 'success')
@@ -918,6 +924,7 @@ function ReadingDetail({
   onClose: () => void
   onDeleted: () => void
 }) {
+  const profile = useActiveProfile()
   const [url, setUrl] = useState('')
   useEffect(() => {
     if (!reading?.image) { setUrl(''); return }
@@ -928,7 +935,7 @@ function ReadingDetail({
 
   if (!reading) return null
   const meta = VITAL_META[reading.kind]
-  const snap = buildHealthReport(reading, prior, tracker)
+  const snap = buildHealthReport(reading, prior, tracker, profile ?? undefined)
 
   return (
     <Dialog open onClose={onClose} title={`${meta.emoji} ${meta.label}`} wide>

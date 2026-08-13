@@ -5,7 +5,7 @@
  * Always framed as organizational guidance, not a diagnosis.
  */
 
-import type { HealthTracker, VitalKind, VitalReading } from './types'
+import type { HealthTracker, Profile, VitalKind, VitalReading } from './types'
 import {
   classifyReading,
   formatReading,
@@ -45,6 +45,7 @@ export function buildHealthReport(
   reading: VitalReading,
   previous: VitalReading[],
   tracker?: HealthTracker | null,
+  profile?: Profile | null,
 ): HealthReport {
   const cls = classifyReading(reading, tracker)
   const kind = reading.kind
@@ -65,7 +66,7 @@ export function buildHealthReport(
     stability,
     stabilityLabel: stabilityPhrase(stability),
     vsLast,
-    suggestions: suggestionsFor(kind, cls, stability, urgent),
+    suggestions: suggestionsFor(kind, cls, stability, urgent, profile),
     urgent,
     disclaimer: DISCLAIMER,
   }
@@ -174,6 +175,7 @@ function suggestionsFor(
   cls: VitalClass,
   stability: Stability,
   urgent: boolean,
+  profile?: Profile | null,
 ): HealthSuggestion[] {
   if (urgent) {
     return [

@@ -39,6 +39,11 @@ export function TodayPage() {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
             {greeting()}{profile ? `, ${profile.name.split(' ')[0]}` : ''} {profile?.avatarEmoji}
+            {profile && (profile.age != null || profile.weight != null) && (
+              <span className="ml-2 text-xs font-normal text-slate-400">
+                ({[profile.age != null ? `${profile.age} yrs` : null, profile.weight != null ? `${profile.weight} ${profile.weightUnit || 'kg'}` : null].filter(Boolean).join(' · ')})
+              </span>
+            )}
           </p>
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
             Today's <span className="text-gradient">plan</span>
