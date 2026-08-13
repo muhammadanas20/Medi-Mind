@@ -3,12 +3,23 @@ import {
   CalendarClock, ChartNoAxesColumn, CheckCircle2, HeartPulse,
   Info, Moon, Pill, ScanLine, Search, Settings2, Sun, TriangleAlert,
 } from 'lucide-react'
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { lazy, Suspense, type ReactNode } from 'react'
+import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '../lib/utils'
 import { useUiStore } from '../state/ui'
 import { usePatchSettings, useProfiles, useSetActiveProfile, useActiveProfile } from '../state/hooks'
 import { InstallAppBanner } from './install'
 import { Button } from './ui'
+import { ErrorBoundary } from './ErrorBoundary'
+import { TodayPage } from '../pages/TodayPage'
+
+// Keep startup light on mobile: feature-heavy screens (camera, AI settings and
+// analytics) are downloaded only when opened, then cached by the service worker.
+const MedsPage = lazy(() => import('../pages/MedsPage').then((module) => ({ default: module.MedsPage })))
+const ScanPage = lazy(() => import('../pages/ScanPage').then((module) => ({ default: module.ScanPage })))
+const PillIdPage = lazy(() => import('../pages/PillIdPage').then((module) => ({ default: module.PillIdPage })))
+const InsightsPage = lazy(() => import('../pages/InsightsPage').then((module) => ({ default: module.InsightsPage })))
+const SettingsPage = lazy(() => import('../pages/SettingsPage').then((module) => ({ default: module.SettingsPage })))
 
 const NAV = [
   { to: '/', label: 'Today', icon: CalendarClock, end: true },
@@ -17,6 +28,21 @@ const NAV = [
   { to: '/pill-id', label: 'Pill ID', icon: Search },
   { to: '/insights', label: 'Insights', icon: ChartNoAxesColumn },
 ]
+
+function LazyPage({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<PageLoader />}>{children}</Suspense>
+}
+
+function PageLoader() {
+  return (
+    <div className="flex min-h-64 items-center justify-center" role="status" aria-label="Loading page">
+      <div className="flex items-center gap-3 rounded-2xl bg-white/50 px-4 py-3 text-sm font-semibold text-slate-500 dark:bg-white/5 dark:text-slate-400">
+        <span className="size-4 animate-spin rounded-full border-2 border-brand-500/25 border-t-brand-500" />
+        Loading…
+      </div>
+    </div>
+  )
+}
 
 export function AppShell() {
   const settings = useUiStore((s) => s.settings)
@@ -99,17 +125,33 @@ export function AppShell() {
         <InstallAppBanner />
 
         <main className="min-w-0 flex-1">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
+          {/* Route transitions. We pass the *current* location explicitly to
+              <Routes> and key the wrapper by pathname so AnimatePresence can
+              keep the outgoing page mounted (showing its own content) while the
+              incoming page animates in. The previous pattern keyed an <Outlet/>
+              here, which made the exiting node render the *new* route and could
+              leave the viewport blank on navigation (e.g. Settings not opening). */}
+          <ErrorBoundary>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <Routes location={location}>
+                  <Route index element={<TodayPage />} />
+                  <Route path="meds" element={<LazyPage><MedsPage /></LazyPage>} />
+                  <Route path="scan" element={<LazyPage><ScanPage /></LazyPage>} />
+                  <Route path="pill-id" element={<LazyPage><PillIdPage /></LazyPage>} />
+                  <Route path="insights" element={<LazyPage><InsightsPage /></LazyPage>} />
+                  <Route path="settings" element={<LazyPage><SettingsPage /></LazyPage>} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </motion.div>
+            </AnimatePresence>
+          </ErrorBoundary>
         </main>
 
         <footer className="mt-10 hidden items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500 lg:flex">
