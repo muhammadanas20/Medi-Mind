@@ -1,21 +1,25 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Activity, ArrowLeft, ArrowRight, BadgeCheck, BrainCircuit, CalendarDays, CircleAlert,
-  FlaskConical, PenLine, ScanLine, Search, ShieldCheck, Stethoscope, Trash2,
+  Activity, ArrowLeft, ArrowRight, BadgeCheck, BrainCircuit, CalendarDays, ChevronDown,
+  CircleAlert, FlaskConical, ImageIcon, Pill, Plus, ScanLine, Search, ShieldCheck,
+  Stethoscope, Trash2,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CameraCapture } from '../components/camera'
 import { SlotIcon } from '../components/icons'
-import { AIScanLoader, Badge, Button, Card, Field, Input, Select, Textarea } from '../components/ui'
-import { SLOT_META } from '../lib/reminders'
+import { DoseSlotPicker } from '../components/slot-picker'
+import { AIScanLoader, Badge, Button, Card, Field, Input, Select } from '../components/ui'
+import { foodLabel } from '../lib/reminders'
 import { SLOTS, type Slot } from '../lib/types'
 import { extractPrescription } from '../ai/service'
 import { parseDurationDays, foodFromText } from '../ai/extract'
 import { db, todayStr, uid } from '../lib/db'
 import { prepareForAI, prepareForOCR } from '../lib/image'
 import type { ExtractedPrescription, ExtractedMedicine, FoodInstruction, Prescription } from '../lib/types'
+import { MED_FORMS } from '../lib/meds-helpers'
 import { runOCR, type OcrProgress } from '../lib/ocr'
+import { cn } from '../lib/utils'
 import { useActiveProfile } from '../state/hooks'
 import { useUiStore } from '../state/ui'
 
@@ -169,7 +173,7 @@ export function ScanPage() {
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               {[
                 { icon: ScanLine, t: '1 · Scan', d: 'Camera or files — image is processed on your terms' },
-                { icon: BrainCircuit, t: '2 · Extract', d: 'AI structures medicines into reviewable cards' },
+                { icon: BrainCircuit, t: '2 · Extract', d: 'AI structures medicines into a reviewable list' },
                 { icon: BadgeCheck, t: '3 · Confirm', d: 'You approve every entry before reminders start' },
               ].map((s) => (
                 <Card key={s.t} className="flex items-start gap-3 !p-4">
@@ -224,7 +228,6 @@ export function ScanPage() {
 
         {stage === 'review' && extraction && (
           <motion.div key="review" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            {/* status banner */}
             <Card className={
               aiFailed
                 ? 'border-warn-500/30 !bg-warn-500/[0.06]'
@@ -236,7 +239,7 @@ export function ScanPage() {
                 ) : (
                   <BrainCircuit className="mt-0.5 size-5 shrink-0 text-accent-500" />
                 )}
-                <div className="text-sm">
+                <div className="min-w-0 text-sm">
                   {aiFailed ? (
                     <>
                       <p className="font-bold text-warn-600 dark:text-warn-400">AI extraction unavailable</p>
@@ -255,7 +258,7 @@ export function ScanPage() {
                         )}
                       </div>
                       <p className="mt-0.5 text-slate-500 dark:text-slate-400">
-                        AI evaluates age & weight safety. Tap any value to correct it before confirming.
+                        Tap a medicine to edit it. Nothing is scheduled until you confirm.
                       </p>
                     </>
                   )}
@@ -263,68 +266,45 @@ export function ScanPage() {
               </div>
             </Card>
 
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,340px)_1fr]">
-              {/* original + OCR side column */}
-              <div className="space-y-4">
-                {imageUrl && (
-                  <Card className="!p-2">
-                    <img src={imageUrl} alt="Prescription scan" className="w-full rounded-2xl object-contain" />
-                  </Card>
-                )}
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,280px)_1fr] xl:grid-cols-[minmax(0,320px)_1fr]">
+              <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+                {imageUrl && <ScanImagePreview url={imageUrl} />}
                 {ocrText && (
                   <Card>
                     <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
                       OCR text (offline fallback)
                     </p>
-                    <pre className="max-h-56 overflow-auto whitespace-pre-wrap text-xs leading-relaxed text-slate-600 dark:text-slate-300">{ocrText}</pre>
+                    <pre className="max-h-40 overflow-auto whitespace-pre-wrap text-xs leading-relaxed text-slate-600 dark:text-slate-300">{ocrText}</pre>
                   </Card>
                 )}
               </div>
 
-              {/* editable structured data */}
-              <div className="space-y-4">
-                <Card className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Patient"><Input value={extraction.patientName ?? ''} onChange={(e) => setExtraction({ ...extraction, patientName: e.target.value })} placeholder="—" /></Field>
-                    <Field label="Doctor"><Input value={extraction.doctorName ?? ''} onChange={(e) => setExtraction({ ...extraction, doctorName: e.target.value })} placeholder="—" /></Field>
-                    <Field label="Hospital"><Input value={extraction.hospital ?? ''} onChange={(e) => setExtraction({ ...extraction, hospital: e.target.value })} placeholder="—" /></Field>
-                    <Field label="Diagnosis"><Input value={extraction.disease ?? ''} onChange={(e) => setExtraction({ ...extraction, disease: e.target.value })} placeholder="—" /></Field>
-                    <Field label="Follow-up date"><Input value={extraction.followUpDate ?? ''} onChange={(e) => setExtraction({ ...extraction, followUpDate: e.target.value })} placeholder="e.g. 2026-09-01" /></Field>
-                    <Field label="Tests"><Input value={(extraction.tests ?? []).join(', ')} onChange={(e) => setExtraction({ ...extraction, tests: e.target.value ? e.target.value.split(',').map((s) => s.trim()) : undefined })} placeholder="e.g. HbA1c, Lipid panel" /></Field>
-                  </div>
-                </Card>
+              <div className="min-w-0 space-y-4 pb-28 lg:pb-10">
+                <PrescriptionDetailsCard
+                  extraction={extraction}
+                  onChange={setExtraction}
+                  defaultOpen={!extraction.medicines.some((m) => m.medicine.trim())}
+                />
 
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold tracking-tight">Medicines ({extraction.medicines.length})</h2>
-                  <Button variant="subtle" size="sm" onClick={() => setExtraction({ ...extraction, medicines: [...extraction.medicines, emptyMedicine()] })}>
-                    <PenLine /> Add manually
-                  </Button>
-                </div>
-
-                {extraction.medicines.map((m, i) => (
-                  <MedicineReviewCard
-                    key={i}
-                    med={m}
-                    index={i}
-                    onChange={(next) =>
-                      setExtraction({
-                        ...extraction,
-                        medicines: extraction.medicines.map((x, j) => (j === i ? next : x)),
-                      })
-                    }
-                    onRemove={() =>
-                      setExtraction({ ...extraction, medicines: extraction.medicines.filter((_, j) => j !== i) })
-                    }
-                  />
-                ))}
+                <MedicineReviewList
+                  medicines={extraction.medicines}
+                  onChange={(medicines) => setExtraction({ ...extraction, medicines })}
+                />
 
                 <div className="sticky bottom-24 z-10 lg:bottom-6">
-                  <Card className="glass-strong flex flex-wrap items-center gap-3 !p-4">
-                    <ShieldCheck className="size-5 text-emerald-500" />
-                    <p className="min-w-40 flex-1 text-xs font-medium text-slate-600 dark:text-slate-300">
-                      I reviewed each medicine against the original prescription.
-                    </p>
-                    <Button size="lg" onClick={() => void confirmAll()} data-testid="confirm-extraction">
+                  <Card className="glass-strong flex flex-col gap-3 !p-4 sm:flex-row sm:items-center">
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <ShieldCheck className="mt-0.5 size-5 shrink-0 text-emerald-500" />
+                      <p className="text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-300">
+                        I reviewed each medicine against the original prescription.
+                      </p>
+                    </div>
+                    <Button
+                      size="lg"
+                      className="w-full shrink-0 sm:w-auto"
+                      onClick={() => void confirmAll()}
+                      data-testid="confirm-extraction"
+                    >
                       <BadgeCheck /> Confirm {extraction.medicines.filter((m) => m.medicine.trim()).length} & schedule
                     </Button>
                   </Card>
@@ -386,92 +366,350 @@ export function ScanPage() {
 }
 
 function emptyMedicine(): ExtractedMedicine {
-  return { medicine: '', morning: 1, afternoon: 0, evening: 0, night: 0, foodRelation: 'any' }
+  return { medicine: '', form: 'tablet', morning: 1, afternoon: 0, evening: 0, night: 0, foodRelation: 'any' }
 }
 
-/* ------------------------------ review card ------------------------------ */
+/* ------------------------------ review UI ------------------------------ */
 
-function MedicineReviewCard({
+function ScanImagePreview({ url }: { url: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <Card className="!p-2 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex w-full cursor-pointer items-center gap-3 text-left"
+        >
+          <img src={url} alt="" className="size-14 shrink-0 rounded-xl object-cover" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold">Original prescription</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {open ? 'Tap to hide' : 'Tap to compare while reviewing'}
+            </p>
+          </div>
+          <ImageIcon className="size-4 shrink-0 text-slate-400" />
+        </button>
+        {open && (
+          <img src={url} alt="Prescription scan" className="mt-2 max-h-72 w-full rounded-2xl object-contain" />
+        )}
+      </Card>
+      <Card className="hidden !p-2 lg:block">
+        <img src={url} alt="Prescription scan" className="w-full rounded-2xl object-contain" />
+      </Card>
+    </>
+  )
+}
+
+function PrescriptionDetailsCard({
+  extraction,
+  onChange,
+  defaultOpen,
+}: {
+  extraction: ExtractedPrescription
+  onChange: (next: ExtractedPrescription) => void
+  defaultOpen: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  const summary = [extraction.patientName, extraction.doctorName, extraction.hospital, extraction.disease]
+    .filter(Boolean)
+    .join(' · ')
+
+  return (
+    <Card className="!p-0 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left sm:px-5"
+      >
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Prescription details</p>
+          <p className="truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
+            {summary || 'Patient, doctor, diagnosis, follow-up…'}
+          </p>
+        </div>
+        <ChevronDown className={cn('size-4 shrink-0 text-slate-400 transition-transform', open && 'rotate-180')} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="overflow-hidden"
+          >
+            <div className="grid gap-3 border-t border-slate-200/70 px-4 py-4 dark:border-white/8 sm:grid-cols-2 sm:px-5">
+              <Field label="Patient">
+                <Input value={extraction.patientName ?? ''} onChange={(e) => onChange({ ...extraction, patientName: e.target.value })} placeholder="—" />
+              </Field>
+              <Field label="Doctor">
+                <Input value={extraction.doctorName ?? ''} onChange={(e) => onChange({ ...extraction, doctorName: e.target.value })} placeholder="—" />
+              </Field>
+              <Field label="Hospital">
+                <Input value={extraction.hospital ?? ''} onChange={(e) => onChange({ ...extraction, hospital: e.target.value })} placeholder="—" />
+              </Field>
+              <Field label="Diagnosis">
+                <Input value={extraction.disease ?? ''} onChange={(e) => onChange({ ...extraction, disease: e.target.value })} placeholder="—" />
+              </Field>
+              <Field label="Follow-up date">
+                <Input value={extraction.followUpDate ?? ''} onChange={(e) => onChange({ ...extraction, followUpDate: e.target.value })} placeholder="e.g. 2026-09-01" />
+              </Field>
+              <Field label="Tests">
+                <Input
+                  value={(extraction.tests ?? []).join(', ')}
+                  onChange={(e) => onChange({
+                    ...extraction,
+                    tests: e.target.value ? e.target.value.split(',').map((s) => s.trim()) : undefined,
+                  })}
+                  placeholder="e.g. HbA1c, Lipid panel"
+                />
+              </Field>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Card>
+  )
+}
+
+function MedicineReviewList({
+  medicines,
+  onChange,
+}: {
+  medicines: ExtractedMedicine[]
+  onChange: (next: ExtractedMedicine[]) => void
+}) {
+  const [expanded, setExpanded] = useState(0)
+  const prevLen = useRef(medicines.length)
+
+  useEffect(() => {
+    if (medicines.length > prevLen.current) {
+      setExpanded(medicines.length - 1)
+    } else {
+      setExpanded((i) => (medicines.length === 0 ? -1 : Math.min(i, medicines.length - 1)))
+    }
+    prevLen.current = medicines.length
+  }, [medicines.length])
+
+  const named = medicines.filter((m) => m.medicine.trim()).length
+
+  return (
+    <Card className="!p-0 overflow-hidden" data-testid="review-med-list">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
+        <div className="min-w-0">
+          <h2 className="text-lg font-bold tracking-tight">Medicines</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {medicines.length === 0
+              ? 'Nothing extracted yet — add one manually'
+              : `${named} of ${medicines.length} named · tap a row to edit`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {medicines.length > 0 && <Badge tone="brand">{medicines.length}</Badge>}
+          <Button
+            variant="subtle"
+            size="sm"
+            onClick={() => onChange([...medicines, emptyMedicine()])}
+          >
+            <Plus /> Add
+          </Button>
+        </div>
+      </div>
+
+      {medicines.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 border-t border-slate-200/70 px-4 py-10 text-center dark:border-white/8">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-brand-500/12 text-brand-600 dark:text-brand-300">
+            <Pill className="size-6" />
+          </div>
+          <div>
+            <p className="font-bold">No medicines yet</p>
+            <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+              Add one manually, or scan the prescription again.
+            </p>
+          </div>
+          <Button onClick={() => onChange([emptyMedicine()])}>
+            <Plus /> Add medicine
+          </Button>
+        </div>
+      ) : (
+        <ul className="divide-y divide-slate-200/70 dark:divide-white/8">
+          {medicines.map((med, i) => (
+            <MedicineReviewRow
+              key={i}
+              med={med}
+              index={i}
+              open={expanded === i}
+              onToggle={() => setExpanded(expanded === i ? -1 : i)}
+              onChange={(next) => onChange(medicines.map((x, j) => (j === i ? next : x)))}
+              onRemove={() => onChange(medicines.filter((_, j) => j !== i))}
+            />
+          ))}
+        </ul>
+      )}
+    </Card>
+  )
+}
+
+function MedicineReviewRow({
   med,
   index,
+  open,
+  onToggle,
   onChange,
   onRemove,
 }: {
   med: ExtractedMedicine
   index: number
+  open: boolean
+  onToggle: () => void
   onChange: (m: ExtractedMedicine) => void
   onRemove: () => void
 }) {
-  const dose = (key: Slot, delta: number) => {
-    onChange({ ...med, [key]: Math.max(0, Math.min(6, (med[key] ?? 0) + delta)) })
-  }
   const color = MED_COLORS[index % MED_COLORS.length]
   const hasName = med.medicine.trim().length > 0
+  const activeSlots = SLOTS.filter((s) => (med[s] ?? 0) > 0)
+  const totalDoses = activeSlots.reduce((sum, s) => sum + (med[s] ?? 0), 0)
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, ease: 'easeOut' }}>
-      <Card className={`relative overflow-hidden ${hasName ? '' : 'border-warn-500/40'}`}>
-        <div className="absolute inset-y-0 left-0 w-1" style={{ background: color }} />
-        <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
-          <Input
-            className="!h-10 col-span-2 min-w-36 font-bold sm:col-span-1 sm:flex-1"
-            value={med.medicine}
-            placeholder="Medicine name *"
-            data-testid={`review-med-${index}`}
-            onChange={(e) => onChange({ ...med, medicine: e.target.value })}
-          />
-          <Input
-            className="!h-10 w-full sm:w-28"
-            value={med.strength ?? ''}
-            placeholder="Strength"
-            onChange={(e) => onChange({ ...med, strength: e.target.value })}
-          />
-          <Select
-            className="!h-10 w-full sm:w-28"
-            value={med.foodRelation ?? 'any'}
-            onChange={(e) => onChange({ ...med, foodRelation: e.target.value as FoodInstruction })}
-          >
-            <option value="any">Any time</option>
-            <option value="before">Before food</option>
-            <option value="after">After food</option>
-            <option value="with">With food</option>
-          </Select>
-          <Input
-            className="!h-10 w-full sm:w-28"
-            value={med.duration ?? ''}
-            placeholder="Duration"
-            onChange={(e) => onChange({ ...med, duration: e.target.value })}
-          />
-          <Button size="iconsm" variant="ghost" className="justify-self-end text-danger-500 sm:justify-self-auto" onClick={onRemove} aria-label="Remove medicine">
-            <Trash2 />
-          </Button>
+    <li className={cn(open && 'bg-brand-500/[0.03] dark:bg-white/[0.02]')}>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left sm:px-5"
+      >
+        <span className="w-5 shrink-0 text-center text-xs font-bold tabular-nums text-slate-400">
+          {index + 1}
+        </span>
+        <span
+          className="flex size-10 shrink-0 items-center justify-center rounded-2xl text-sm font-extrabold text-white shadow-md"
+          style={{ background: color }}
+        >
+          {hasName ? med.medicine.slice(0, 1).toUpperCase() : '?'}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <p className={cn('min-w-0 truncate font-bold', !hasName && 'text-slate-400')}>
+              {hasName ? med.medicine : 'Untitled medicine'}
+            </p>
+            {!hasName && <Badge tone="warn" className="shrink-0">Name needed</Badge>}
+            {hasName && totalDoses === 0 && <Badge tone="warn" className="shrink-0">No schedule</Badge>}
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+            {med.strength && <span className="font-semibold text-slate-600 dark:text-slate-300">{med.strength}</span>}
+            {med.form && <span>{med.form}</span>}
+            {activeSlots.length > 0 ? (
+              activeSlots.map((s) => (
+                <span key={s} className="inline-flex items-center gap-1">
+                  <SlotIcon slot={s} className="size-3.5" />
+                  <span className="font-semibold tabular-nums">{med[s]}</span>
+                </span>
+              ))
+            ) : (
+              <span>No doses set</span>
+            )}
+            {med.foodRelation && med.foodRelation !== 'any' && (
+              <span>· {foodLabel(med.foodRelation)}</span>
+            )}
+            {med.duration && <span>· {med.duration}</span>}
+          </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {SLOTS.map((slot) => (
-            <div
-              key={slot}
-              className={
-                (med[slot] ?? 0) > 0
-                  ? 'flex items-center gap-2 rounded-2xl border border-brand-500/40 bg-brand-500/[0.08] px-3 py-1.5'
-                  : 'flex items-center gap-2 rounded-2xl border border-slate-300/50 px-3 py-1.5 dark:border-white/10'
-              }
-            >
-              <SlotIcon slot={slot} className="size-4" />
-              <span className="text-xs font-semibold">{SLOT_META[slot].label}</span>
-              <div className="flex items-center gap-1.5">
-                <button aria-label={`less ${slot}`} className="flex size-6 cursor-pointer items-center justify-center rounded-full bg-slate-300/60 text-xs font-bold dark:bg-white/10" onClick={() => dose(slot, -1)}>−</button>
-                <span className="w-4 text-center text-sm font-extrabold tabular-nums">{med[slot] ?? 0}</span>
-                <button aria-label={`more ${slot}`} className="flex size-6 cursor-pointer items-center justify-center rounded-full bg-brand-500/20 text-xs font-bold text-brand-700 dark:text-brand-300" onClick={() => dose(slot, 1)}>+</button>
+        <ChevronDown className={cn('size-4 shrink-0 text-slate-400 transition-transform duration-200', open && 'rotate-180')} />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-3 px-4 pb-4 sm:px-5">
+              <Field label="Medicine name">
+                <Input
+                  className="font-bold"
+                  value={med.medicine}
+                  placeholder="e.g. Metformin"
+                  data-testid={`review-med-${index}`}
+                  onChange={(e) => onChange({ ...med, medicine: e.target.value })}
+                />
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Strength">
+                  <Input
+                    value={med.strength ?? ''}
+                    placeholder="500 mg"
+                    onChange={(e) => onChange({ ...med, strength: e.target.value })}
+                  />
+                </Field>
+                <Field label="Form">
+                  <Select
+                    value={med.form || 'tablet'}
+                    onChange={(e) => onChange({ ...med, form: e.target.value })}
+                  >
+                    {MED_FORMS.map((f) => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Duration">
+                  <Input
+                    value={med.duration ?? ''}
+                    placeholder="30 days"
+                    onChange={(e) => onChange({ ...med, duration: e.target.value })}
+                  />
+                </Field>
+                <Field label="Food timing">
+                  <Select
+                    value={med.foodRelation ?? 'any'}
+                    onChange={(e) => onChange({ ...med, foodRelation: e.target.value as FoodInstruction })}
+                  >
+                    <option value="any">Any time</option>
+                    <option value="before">Before food</option>
+                    <option value="after">After food</option>
+                    <option value="with">With food</option>
+                  </Select>
+                </Field>
+              </div>
+
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Dose schedule
+                </span>
+                <div className="mt-2">
+                  <DoseSlotPicker
+                    slots={{ morning: med.morning, afternoon: med.afternoon, evening: med.evening, night: med.night }}
+                    onChange={(slot: Slot, qty) => onChange({ ...med, [slot]: qty })}
+                  />
+                </div>
+              </div>
+
+              <Field label="Notes" hint="Optional — anything written on the script">
+                <Input
+                  value={med.notes ?? ''}
+                  placeholder="e.g. Swallow whole, do not crush"
+                  onChange={(e) => onChange({ ...med, notes: e.target.value })}
+                />
+              </Field>
+
+              {(med.food && med.food.trim()) ? (
+                <p className="rounded-xl bg-slate-200/50 px-3 py-2 text-xs text-slate-500 dark:bg-white/[0.04] dark:text-slate-400">
+                  From the script: {med.food}
+                </p>
+              ) : null}
+
+              <div className="flex justify-end">
+                <Button size="sm" variant="ghost" className="text-danger-500" onClick={onRemove} aria-label="Remove medicine">
+                  <Trash2 /> Remove
+                </Button>
               </div>
             </div>
-          ))}
-        </div>
-        {(med.food || med.notes) && (
-          <p className="mt-2 text-xs italic text-slate-500 dark:text-slate-400">
-            {[med.food, med.notes].filter(Boolean).join(' · ')}
-          </p>
+          </motion.div>
         )}
-      </Card>
-    </motion.div>
+      </AnimatePresence>
+    </li>
   )
 }

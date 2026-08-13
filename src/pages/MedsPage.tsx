@@ -1,11 +1,13 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Archive, PackageOpen, PenLine, Plus, ShieldAlert, Trash2 } from 'lucide-react'
+import { Archive, PackageOpen, PenLine, Pill, Plus, ScanLine, ShieldAlert, Trash2 } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { SlotIcon } from '../components/icons'
+import { DoseSlotPicker } from '../components/slot-picker'
 import { Badge, Button, Card, Dialog, Field, Input, Select, SectionTitle, Switch, Textarea } from '../components/ui'
 import { db, todayStr, uid } from '../lib/db'
 import type { FoodInstruction, Medication, Slot } from '../lib/types'
-import { SLOTS, SLOT_META_, foodLabel, medSlotsSummary } from '../lib/meds-helpers'
+import { MED_FORMS, SLOTS, foodLabel, medSlotsSummary } from '../lib/meds-helpers'
 import { cn } from '../lib/utils'
 import { useActiveProfile, useMedications } from '../state/hooks'
 import { useUiStore } from '../state/ui'
@@ -73,74 +75,121 @@ export function MedsPage() {
         </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <AnimatePresence>
-          {active.map((med, i) => {
-            const refillSoon =
-              med.pillsRemaining != null && med.refillAt != null && med.pillsRemaining <= med.refillAt / 3
-            return (
-              <motion.div
-                key={med.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: 0.04 * i, duration: 0.25, ease: 'easeOut' }}
-              >
-                <Card className="card-hover group relative overflow-hidden">
-                  <div className="absolute inset-x-0 top-0 h-1" style={{ background: med.color }} />
-                  <div className="flex items-start gap-3">
+      {active.length === 0 ? (
+        <Card className="flex flex-col items-center gap-4 py-12 text-center">
+          <div className="flex size-16 items-center justify-center rounded-3xl bg-brand-500/12 text-brand-600 dark:text-brand-300">
+            <Pill className="size-8" />
+          </div>
+          <div>
+            <p className="text-lg font-bold">No active medicines</p>
+            <p className="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">
+              Scan a prescription and the extracted list lands here — or add one by hand.
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Link to="/scan">
+              <Button>
+                <ScanLine /> Scan prescription
+              </Button>
+            </Link>
+            <Button variant="outline" onClick={openNew}>
+              <Plus /> Add manually
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <Card className="!p-0 overflow-hidden" data-testid="meds-list">
+          <ul className="divide-y divide-slate-200/70 dark:divide-white/8">
+            <AnimatePresence initial={false}>
+              {active.map((med, i) => {
+                const refillSoon =
+                  med.pillsRemaining != null && med.refillAt != null && med.pillsRemaining <= med.refillAt / 3
+                return (
+                  <motion.li
+                    key={med.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ delay: 0.03 * i, duration: 0.22, ease: 'easeOut' }}
+                    className="relative"
+                  >
                     <div
-                      className="flex size-12 shrink-0 items-center justify-center rounded-2xl text-xl font-extrabold text-white shadow-lg"
+                      className="absolute inset-y-3 left-0 w-1 rounded-r-full"
                       style={{ background: med.color }}
-                    >
-                      {med.name.slice(0, 1).toUpperCase()}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="truncate font-bold">{med.name}</h3>
-                        {med.isCritical && (
-                          <Badge tone="danger">
-                            <ShieldAlert className="size-3" /> Critical
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {[med.strength, med.form].filter(Boolean).join(' · ') || 'No strength set'}
-                      </p>
-                      <p
-                        className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-medium text-slate-600 dark:text-slate-300"
-                        aria-label={medSlotsSummary(med)}
+                    />
+                    <div className="flex items-start gap-3 px-4 py-3.5 sm:items-center sm:px-5">
+                      <div
+                        className="flex size-11 shrink-0 items-center justify-center rounded-2xl text-base font-extrabold text-white shadow-md"
+                        style={{ background: med.color }}
                       >
-                        <MedSlotsLine med={med} />
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {med.durationDays && <Badge tone="neutral">{med.durationDays} days</Badge>}
-                        {med.food !== 'any' && <Badge tone="brand">{med.food} food</Badge>}
-                        {med.pillsRemaining != null && (
-                          <Badge tone={refillSoon ? 'warn' : 'neutral'}>
-                            <PackageOpen className="size-3" /> {med.pillsRemaining} left
-                          </Badge>
-                        )}
+                        {med.name.slice(0, 1).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <h3 className="min-w-0 truncate font-bold">{med.name}</h3>
+                          {med.isCritical && (
+                            <Badge tone="danger" className="shrink-0">
+                              <ShieldAlert className="size-3" /> Critical
+                            </Badge>
+                          )}
+                          {med.sourcePrescriptionId && <Badge tone="accent" className="shrink-0">Scanned</Badge>}
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {[med.strength, med.form].filter(Boolean).join(' · ') || 'No strength set'}
+                        </p>
+                        <p
+                          className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-medium text-slate-600 dark:text-slate-300"
+                          aria-label={medSlotsSummary(med)}
+                        >
+                          <MedSlotsLine med={med} />
+                        </p>
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {med.durationDays && <Badge tone="neutral">{med.durationDays} days</Badge>}
+                          {med.pillsRemaining != null && (
+                            <Badge tone={refillSoon ? 'warn' : 'neutral'}>
+                              <PackageOpen className="size-3" /> {med.pillsRemaining} left
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-0.5">
+                        <Button
+                          size="iconsm"
+                          variant="ghost"
+                          title="Edit"
+                          aria-label={`Edit ${med.name}`}
+                          onClick={() => { setEditing(med); setFormOpen(true) }}
+                        >
+                          <PenLine />
+                        </Button>
+                        <Button
+                          size="iconsm"
+                          variant="ghost"
+                          title="Archive"
+                          aria-label={`Archive ${med.name}`}
+                          onClick={() => void toggleActive(med)}
+                        >
+                          <Archive />
+                        </Button>
+                        <Button
+                          size="iconsm"
+                          variant="ghost"
+                          className="text-danger-500"
+                          title="Delete"
+                          aria-label={`Delete ${med.name}`}
+                          onClick={() => void remove(med)}
+                        >
+                          <Trash2 />
+                        </Button>
                       </div>
                     </div>
-                  </div>
-                  <div className="mt-4 flex items-center justify-end gap-1 border-t border-slate-200/60 pt-3 dark:border-white/8">
-                    <Button size="sm" variant="ghost" onClick={() => { setEditing(med); setFormOpen(true) }}>
-                      <PenLine /> Edit
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => void toggleActive(med)}>
-                      <Archive /> Archive
-                    </Button>
-                    <Button size="sm" variant="ghost" className="text-danger-500" onClick={() => void remove(med)}>
-                      <Trash2 />
-                    </Button>
-                  </div>
-                </Card>
-              </motion.div>
-            )
-          })}
-        </AnimatePresence>
-      </div>
+                  </motion.li>
+                )
+              })}
+            </AnimatePresence>
+          </ul>
+        </Card>
+      )}
 
       {archived.length > 0 && (
         <Card>
@@ -257,7 +306,7 @@ export function MedicationForm({
           </Field>
           <Field label="Form">
             <Select value={form} onChange={(e) => setForm(e.target.value)}>
-              {['tablet', 'capsule', 'syrup', 'injection', 'drops', 'inhaler', 'cream', 'other'].map((f) => (
+              {MED_FORMS.map((f) => (
                 <option key={f} value={f}>{f}</option>
               ))}
             </Select>
@@ -269,40 +318,12 @@ export function MedicationForm({
         <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           Dose schedule
         </span>
-        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {SLOTS.map((slot) => {
-            const qty = slots[slot] ?? 0
-            return (
-              <div
-                key={slot}
-                className={cn(
-                  'rounded-2xl border p-3 text-center transition-all',
-                  qty > 0
-                    ? 'border-brand-500/40 bg-brand-500/[0.08]'
-                    : 'border-slate-300/60 bg-white/40 dark:border-white/10 dark:bg-white/[0.03]',
-                )}
-              >
-                <div className="flex justify-center">
-                  <SlotIcon slot={slot} className="size-6" />
-                </div>
-                <p className="mt-1 text-xs font-bold">{SLOT_META_[slot].label}</p>
-                <div className="mt-2 flex items-center justify-center gap-2">
-                  <button
-                    className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-slate-300/60 text-sm font-bold transition active:scale-90 dark:bg-white/10"
-                    onClick={() => setSlots((s) => ({ ...s, [slot]: Math.max(0, qty - 1) }))}
-                    aria-label={`Decrease ${slot}`}
-                  >−</button>
-                  <span className="w-5 text-center text-sm font-extrabold tabular-nums">{qty}</span>
-                  <button
-                    className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-brand-500/20 text-sm font-bold text-brand-700 transition active:scale-90 dark:text-brand-300"
-                    onClick={() => setSlots((s) => ({ ...s, [slot]: Math.min(6, qty + 1) }))}
-                    aria-label={`Increase ${slot}`}
-                    data-testid={`med-slot-${slot}`}
-                  >+</button>
-                </div>
-              </div>
-            )
-          })}
+        <div className="mt-2">
+          <DoseSlotPicker
+            slots={slots}
+            onChange={(slot, qty) => setSlots((s) => ({ ...s, [slot]: qty }))}
+            testIdPrefix="med-slot"
+          />
         </div>
       </div>
 
