@@ -106,6 +106,20 @@ body {
   @apply bg-slate-100 text-slate-900 antialiased dark:bg-ink-950 dark:text-slate-100;
   font-feature-settings: 'cv02', 'cv03', 'cv04';
   min-height: 100dvh;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
 }
 
 /* Ambient app background — soft radial brand glows */
@@ -156,6 +170,31 @@ body {
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* Keep glass surfaces fluid on mobile GPUs without losing the visual depth. */
+@media (max-width: 767px) {
+  .glass,
+  .glass-strong {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+}
+
+/* Respect the OS motion setting and avoid expensive animation on users/devices
+   that request a calmer experience. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

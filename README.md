@@ -1,7 +1,7 @@
 # 💊 MediMind — AI-Powered Offline Medication Management
 
-[![CI](https://github.com/muhammadanas20/Medical-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/muhammadanas20/Medical-AI/actions/workflows/ci.yml)
-[![Deploy](https://github.com/muhammadanas20/Medical-AI/actions/workflows/deploy.yml/badge.svg)](https://github.com/muhammadanas20/Medical-AI/actions/workflows/deploy.yml)
+[![CI](https://github.com/muhammadanas20/Medi-Mind/actions/workflows/ci.yml/badge.svg)](https://github.com/muhammadanas20/Medi-Mind/actions/workflows/ci.yml)
+[![Deploy](https://github.com/muhammadanas20/Medi-Mind/actions/workflows/deploy.yml/badge.svg)](https://github.com/muhammadanas20/Medi-Mind/actions/workflows/deploy.yml)
 ![tests](https://img.shields.io/badge/unit%20tests-39%20passing-07c5a8)
 ![offline](https://img.shields.io/badge/storage-IndexedDB%20%2B%20Dexie-07c5a8)
 
@@ -36,6 +36,7 @@ Only the *Confirm* button writes schedules.
 | **Multi-provider AI** | OpenAI · Gemini · Claude · OpenRouter · Groq · **Ollama** & **LM Studio** (fully local inference). Fetch-based clients, no SDK bloat. **Test connection** button per provider |
 | **Security** | API keys AES-256-GCM encrypted in IndexedDB; optional **passcode lock** (PBKDF2 310k iters) re-encrypts keys so they need your passcode in memory |
 | **Family mode** | Multiple profiles (elderly, patients, dependents), quick-switcher in the header |
+| **Installable mobile app** | Add to the Android or iPhone home screen; launches standalone without browser controls, includes app shortcuts, safe-area layout, and automatic offline updates |
 | **Local-first** | Dexie/IndexedDB, PWA with offline caching, JSON export/import backup |
 
 ## 🧱 Tech stack
@@ -51,6 +52,10 @@ npm run test       # unit tests: reminder engine, AI parser, crypto, pill matche
 npm run test:e2e   # Playwright smoke flow (chromium)
 npm run build      # production PWA
 ```
+
+### Install on a phone
+
+Open the deployed HTTPS site on the phone. On Android, tap **Install app** in MediMind (or the browser menu → **Install app**). On iPhone, open it in Safari, tap **Share → Add to Home Screen → Add**. Launching the new home-screen icon opens MediMind as a standalone app without browser controls.
 
 ## 🗂️ Architecture
 
@@ -88,11 +93,11 @@ src/
 | Workflow | Trigger | What it does |
 |---|---|---|
 | `ci.yml` | every push & PR | typecheck → 39 unit tests → PWA production build → artifact |
-| `deploy.yml` | push to `main` | builds with `VITE_BASE=/Medical-AI/` and deploys the PWA to **GitHub Pages** |
+| `deploy.yml` | push to `main` | builds with a repository-derived base path and deploys the PWA to **GitHub Pages** |
 | `dependabot.yml` | weekly | grouped npm + actions dependency PRs |
 
 To enable hosting: **Settings → Pages → Source: GitHub Actions**, then push to `main` —
-the app lands at `https://muhammadanas20.github.io/Medical-AI/` fully offline-capable (PWA).
+the app lands at `https://muhammadanas20.github.io/Medi-Mind/` fully offline-capable (PWA).
 
 ## 🧭 Roadmap (v2)
 

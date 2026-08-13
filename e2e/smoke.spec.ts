@@ -48,6 +48,7 @@ test('settings: AI providers, encrypted-key hint and reminder windows', async ({
   await completeOnboarding(page)
   await page.getByTestId('open-settings').click()
 
+  await expect(page.getByText('Install MediMind')).toBeVisible()
   await expect(page.getByText('AI providers')).toBeVisible()
   await expect(page.getByText(/AES/).first()).toBeVisible() // encryption promise visible
   await expect(page.getByText('Reminder windows')).toBeVisible()
