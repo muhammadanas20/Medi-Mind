@@ -278,7 +278,7 @@ export function formatReadingWhen(iso: string): string {
   const today = localDateStr()
   const yesterday = addDays(today, -1)
   const date = localDateStr(d)
-  const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
   if (date === today) return `Today ${time}`
   if (date === yesterday) return `Yesterday ${time}`
   return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${time}`

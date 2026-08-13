@@ -7,7 +7,7 @@ import {
 import { useRef, useState } from 'react'
 import { InstallAppSection } from '../components/install'
 import { draftFromProfile, emptyProfileDraft, parseProfileDraft, ProfileFields, type ProfileDraft } from '../components/profile-form'
-import { Badge, Button, Card, Dialog, DotsLoader, Field, Input, SectionTitle, Select, Switch } from '../components/ui'
+import { Badge, Button, Card, Dialog, DotsLoader, Field, Input, SectionTitle, Select, Switch, TimePicker } from '../components/ui'
 import { disablePasscodeLock, enablePasscodeLock } from '../lib/crypto'
 import {
   listProviders, removeProvider, setActiveProvider, testProvider, upsertProvider,
@@ -402,19 +402,9 @@ function RemindersSection() {
                 <p className="text-sm font-bold">{SLOT_META[slot].label}</p>
                 {/* Wraps below the label on very narrow screens instead of overflowing */}
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
-                  <input
-                    type="time"
-                    value={w.start}
-                    onChange={(e) => setWindow(slot, 'start', e.target.value)}
-                    className="min-w-[5.25rem] flex-1 rounded-lg border border-slate-300/60 bg-white/60 px-2 py-1 text-base font-semibold sm:flex-none sm:text-xs dark:border-white/10 dark:bg-white/5"
-                  />
+                  <TimePicker value={w.start} onChange={(value) => setWindow(slot, 'start', value)} aria-label={`${SLOT_META[slot].label} start time`} />
                   <span className="text-slate-400">→</span>
-                  <input
-                    type="time"
-                    value={w.end}
-                    onChange={(e) => setWindow(slot, 'end', e.target.value)}
-                    className="min-w-[5.25rem] flex-1 rounded-lg border border-slate-300/60 bg-white/60 px-2 py-1 text-base font-semibold sm:flex-none sm:text-xs dark:border-white/10 dark:bg-white/5"
-                  />
+                  <TimePicker value={w.end} onChange={(value) => setWindow(slot, 'end', value)} aria-label={`${SLOT_META[slot].label} end time`} />
                 </div>
               </div>
               <Switch checked={w.enabled} onChange={(v) => void patch({ reminderWindows: { ...settings.reminderWindows, [slot]: { ...w, enabled: v } } })} />

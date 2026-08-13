@@ -10,7 +10,7 @@ import { extractVitalReading } from '../ai/service'
 import { coerceSugarContext } from '../ai/extract'
 import { CameraCapture } from '../components/camera'
 import { Sparkline, VitalTrendChart, type VitalPoint } from '../components/charts'
-import { AIScanLoader, Badge, Button, Card, Dialog, Field, Input, Select, SectionTitle, Switch, Textarea } from '../components/ui'
+import { AIScanLoader, Badge, Button, Card, Dialog, Field, Input, Select, SectionTitle, Switch, Textarea, TimePicker } from '../components/ui'
 import { db, uid } from '../lib/db'
 import { prepareForAI, prepareForOCR } from '../lib/image'
 import { runOCR } from '../lib/ocr'
@@ -755,7 +755,20 @@ function ReadingFields({
           </Select>
         </Field>
         <Field label="When">
-          <Input type="datetime-local" value={when} onChange={(e) => onWhen(e.target.value)} />
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              type="date"
+              className="w-auto min-w-40"
+              value={when.slice(0, 10)}
+              onChange={(e) => onWhen(`${e.target.value}T${when.slice(11, 16) || '00:00'}`)}
+              aria-label="Reading date"
+            />
+            <TimePicker
+              value={when.slice(11, 16) || '00:00'}
+              onChange={(time) => onWhen(`${when.slice(0, 10)}T${time}`)}
+              aria-label="Reading time"
+            />
+          </div>
         </Field>
       </div>
 

@@ -15,6 +15,7 @@ import {
   type TextareaHTMLAttributes,
 } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { toTwentyFourHourTime, toTwelveHourTime } from '../lib/time'
 import { cn } from '../lib/utils'
 
 /* --------------------------------- Button -------------------------------- */
@@ -125,6 +126,47 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
   ),
 )
 Input.displayName = 'Input'
+
+/**
+ * A locale-independent 12-hour time control. Values remain HH:mm internally so
+ * reminder scheduling does not need to change, while people always choose an
+ * hour, minute, and AM/PM instead of interpreting a 24-hour clock.
+ */
+export function TimePicker({
+  value,
+  onChange,
+  className,
+  disabled,
+  'aria-label': ariaLabel = 'Time',
+}: {
+  value: string
+  onChange: (value: string) => void
+  className?: string
+  disabled?: boolean
+  'aria-label'?: string
+}) {
+  const { hour, minute, period } = toTwelveHourTime(value)
+  const update = (nextHour = hour, nextMinute = minute, nextPeriod = period) => {
+    onChange(toTwentyFourHourTime(nextHour, nextMinute, nextPeriod))
+  }
+  const selectClass = 'h-9 min-w-0 rounded-lg border border-slate-300/60 bg-white/60 px-1.5 text-sm font-semibold outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5'
+
+  return (
+    <div className={cn('flex items-center gap-1', className)} aria-label={ariaLabel}>
+      <select aria-label={`${ariaLabel} hour`} value={hour} disabled={disabled} onChange={(e) => update(Number(e.target.value))} className={selectClass}>
+        {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => <option key={h} value={h}>{h}</option>)}
+      </select>
+      <span aria-hidden="true" className="font-bold text-slate-400">:</span>
+      <select aria-label={`${ariaLabel} minute`} value={minute} disabled={disabled} onChange={(e) => update(hour, Number(e.target.value))} className={selectClass}>
+        {Array.from({ length: 60 }, (_, i) => i).map((m) => <option key={m} value={m}>{String(m).padStart(2, '0')}</option>)}
+      </select>
+      <select aria-label={`${ariaLabel} AM or PM`} value={period} disabled={disabled} onChange={(e) => update(hour, minute, e.target.value as 'AM' | 'PM')} className={selectClass}>
+        <option value="AM">AM</option>
+        <option value="PM">PM</option>
+      </select>
+    </div>
+  )
+}
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(
   ({ className, ...props }, ref) => (
