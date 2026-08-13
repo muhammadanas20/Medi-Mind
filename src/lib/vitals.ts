@@ -36,7 +36,6 @@ export const SUGAR_CONTEXTS: { id: BloodSugarContext; label: string }[] = [
 export interface VitalMeta {
   label: string
   short: string
-  emoji: string
   unit: string
   altUnits: string[]
   featured: boolean
@@ -50,7 +49,6 @@ export const VITAL_META: Record<VitalKind, VitalMeta> = {
   blood_pressure: {
     label: 'Blood pressure',
     short: 'BP',
-    emoji: '🫀',
     unit: 'mmHg',
     altUnits: [],
     featured: true,
@@ -62,7 +60,6 @@ export const VITAL_META: Record<VitalKind, VitalMeta> = {
   blood_sugar: {
     label: 'Blood sugar',
     short: 'Glucose',
-    emoji: '🩸',
     unit: 'mg/dL',
     altUnits: ['mmol/L'],
     featured: true,
@@ -74,7 +71,6 @@ export const VITAL_META: Record<VitalKind, VitalMeta> = {
   heart_rate: {
     label: 'Heart rate',
     short: 'Pulse',
-    emoji: '💓',
     unit: 'bpm',
     altUnits: [],
     featured: false,
@@ -86,7 +82,6 @@ export const VITAL_META: Record<VitalKind, VitalMeta> = {
   weight: {
     label: 'Weight',
     short: 'Weight',
-    emoji: '⚖️',
     unit: 'kg',
     altUnits: ['lb'],
     featured: false,
@@ -98,7 +93,6 @@ export const VITAL_META: Record<VitalKind, VitalMeta> = {
   spo2: {
     label: 'Blood oxygen',
     short: 'SpO₂',
-    emoji: '🫁',
     unit: '%',
     altUnits: [],
     featured: false,
@@ -110,7 +104,6 @@ export const VITAL_META: Record<VitalKind, VitalMeta> = {
   temperature: {
     label: 'Temperature',
     short: 'Temp',
-    emoji: '🌡️',
     unit: '°F',
     altUnits: ['°C'],
     featured: false,

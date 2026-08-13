@@ -1,15 +1,33 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Archive, PackageOpen, PenLine, Plus, ShieldAlert, Trash2 } from 'lucide-react'
 import { useState } from 'react'
+import { SlotIcon } from '../components/icons'
 import { Badge, Button, Card, Dialog, Field, Input, Select, SectionTitle, Switch, Textarea } from '../components/ui'
 import { db, todayStr, uid } from '../lib/db'
 import type { FoodInstruction, Medication, Slot } from '../lib/types'
-import { SLOTS, SLOT_META_, medSlotsSummary } from '../lib/meds-helpers'
+import { SLOTS, SLOT_META_, foodLabel, medSlotsSummary } from '../lib/meds-helpers'
 import { cn } from '../lib/utils'
 import { useActiveProfile, useMedications } from '../state/hooks'
 import { useUiStore } from '../state/ui'
 
 const MED_COLORS = ['#07c5a8', '#8b5cf6', '#f59e0b', '#f43f5e', '#0ea5e9', '#84cc16', '#ec4899', '#6366f1']
+
+/** Icon row of scheduled slots — e.g. [sunrise] 1  [moon] 1 · After food */
+function MedSlotsLine({ med }: { med: Medication }) {
+  const slots = SLOTS.filter((s) => (med.slots[s] ?? 0) > 0)
+  if (slots.length === 0) return <span>No schedule</span>
+  return (
+    <>
+      {slots.map((s) => (
+        <span key={s} className="inline-flex items-center gap-1">
+          <SlotIcon slot={s} className="size-3.5" />
+          <span className="font-semibold tabular-nums">{med.slots[s]}</span>
+        </span>
+      ))}
+      {med.food !== 'any' && <span className="text-slate-500 dark:text-slate-400">· {foodLabel(med.food)}</span>}
+    </>
+  )
+}
 
 export function MedsPage() {
   const profile = useActiveProfile()
@@ -63,11 +81,10 @@ export function MedsPage() {
             return (
               <motion.div
                 key={med.id}
-                layout
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: 0.04 * i }}
+                transition={{ delay: 0.04 * i, duration: 0.25, ease: 'easeOut' }}
               >
                 <Card className="card-hover group relative overflow-hidden">
                   <div className="absolute inset-x-0 top-0 h-1" style={{ background: med.color }} />
@@ -90,8 +107,11 @@ export function MedsPage() {
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         {[med.strength, med.form].filter(Boolean).join(' · ') || 'No strength set'}
                       </p>
-                      <p className="mt-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">
-                        {medSlotsSummary(med)}
+                      <p
+                        className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-medium text-slate-600 dark:text-slate-300"
+                        aria-label={medSlotsSummary(med)}
+                      >
+                        <MedSlotsLine med={med} />
                       </p>
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {med.durationDays && <Badge tone="neutral">{med.durationDays} days</Badge>}
@@ -262,8 +282,10 @@ export function MedicationForm({
                     : 'border-slate-300/60 bg-white/40 dark:border-white/10 dark:bg-white/[0.03]',
                 )}
               >
-                <p className="text-lg">{SLOT_META_[slot].emoji}</p>
-                <p className="text-xs font-bold">{SLOT_META_[slot].label}</p>
+                <div className="flex justify-center">
+                  <SlotIcon slot={slot} className="size-6" />
+                </div>
+                <p className="mt-1 text-xs font-bold">{SLOT_META_[slot].label}</p>
                 <div className="mt-2 flex items-center justify-center gap-2">
                   <button
                     className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-slate-300/60 text-sm font-bold transition active:scale-90 dark:bg-white/10"

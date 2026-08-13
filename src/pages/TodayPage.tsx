@@ -3,6 +3,7 @@ import { Activity, ArrowRight, CalendarClock, Flame, Pill, ScanLine } from 'luci
 import { Link } from 'react-router-dom'
 import { WeeklyBars } from '../components/charts'
 import { DoseRow } from '../components/dose'
+import { SlotIcon, VitalIcon } from '../components/icons'
 import { Badge, Card, Ring, SectionTitle } from '../components/ui'
 import { adherenceSeries, overallAdherence, SLOT_META } from '../lib/reminders'
 import { formatTime } from '../lib/reminders'
@@ -68,9 +69,11 @@ export function TodayPage() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Next dose</p>
-              <p className="truncate text-sm font-bold">
-                {nextUp.instance.medicationName} · {SLOT_META[nextUp.instance.slot].emoji}{' '}
-                {formatTime(nextUp.instance.windowStart)}
+              <p className="flex items-center gap-1.5 text-sm font-bold">
+                <SlotIcon slot={nextUp.instance.slot} className="size-4" />
+                <span className="truncate">
+                  {nextUp.instance.medicationName} · {formatTime(nextUp.instance.windowStart)}
+                </span>
               </p>
             </div>
           </Card>
@@ -97,7 +100,7 @@ export function TodayPage() {
                   to="/health"
                   className="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200/70 px-3 py-2.5 transition hover:bg-slate-200/40 dark:border-white/10 dark:hover:bg-white/[0.04]"
                 >
-                  <span className="text-xl">{VITAL_META[tracker.kind].emoji}</span>
+                  <VitalIcon kind={tracker.kind} className="size-6" />
                   <div className="min-w-0 flex-1">
                     <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       {VITAL_META[tracker.kind].label}
@@ -134,8 +137,10 @@ export function TodayPage() {
                   </Badge>
                 }
               >
-                <span className="mr-1.5">{SLOT_META[g.slot].emoji}</span>
-                {SLOT_META[g.slot].label}
+                <span className="inline-flex items-center gap-2">
+                  <SlotIcon slot={g.slot} className="size-5" />
+                  {SLOT_META[g.slot].label}
+                </span>
               </SectionTitle>
               <div className="space-y-1.5">
                 {g.items.map(({ instance, log }) => (

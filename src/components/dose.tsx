@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { AlarmClock, Check, Clock, RotateCcw, X } from 'lucide-react'
-import { useState } from 'react'
+import { AlarmClock, Check, Clock, RotateCcw, TriangleAlert, X } from 'lucide-react'
+import { memo, useState } from 'react'
 import type { DoseLog } from '../lib/types'
 import {
   foodLabel,
@@ -13,6 +13,7 @@ import {
 import { markSkipped, markTaken, resetDose, snooze } from '../lib/scheduler'
 import { cn } from '../lib/utils'
 import { useUiStore } from '../state/ui'
+import { SlotIcon } from './icons'
 import { Badge, Button } from './ui'
 
 const STATUS_STYLE: Record<DoseLog['status'], { label: string; cls: string }> = {
@@ -22,8 +23,12 @@ const STATUS_STYLE: Record<DoseLog['status'], { label: string; cls: string }> = 
   pending: { label: 'Pending', cls: 'bg-brand-500/15 text-brand-600 dark:text-brand-300' },
 }
 
-/** One dose row: medicine, time window, food hint, actions. */
-export function DoseRow({
+/** One dose row: medicine, time window, food hint, actions.
+ *  Memoized — the Today page re-renders on every scheduler tick and each
+ *  store update, and rows are the most numerous element on screen. */
+export const DoseRow = memo(DoseRowImpl)
+
+function DoseRowImpl({
   instance,
   log,
   compact,
@@ -43,9 +48,9 @@ export function DoseRow({
 
   return (
     <motion.div
-      layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: 'easeOut' }}
       className={cn(
         'flex items-center gap-2.5 rounded-2xl border border-transparent p-2.5 transition-colors sm:gap-3 sm:p-3',
         log.status === 'taken' && 'opacity-70',
@@ -202,8 +207,10 @@ export function DueStack() {
               className="absolute inset-x-0 top-0 h-1.5"
               style={{ background: `linear-gradient(90deg, ${current.color}, transparent)` }}
             />
-            <span className="text-4xl">{SLOT_META[current.slot].emoji}</span>
-            <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
+            <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-slate-200/60 dark:bg-white/8">
+              <SlotIcon slot={current.slot} className="size-7" />
+            </span>
+            <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
               {SLOT_META[current.slot].label} dose · {formatTime(current.windowStart)}–{formatTime(current.windowEnd)}
             </p>
             <h3 className="mt-2 text-2xl font-extrabold tracking-tight">{current.medicationName}</h3>
@@ -217,7 +224,9 @@ export function DueStack() {
               )}
             </p>
             {current.isCritical && (
-              <Badge tone="danger" className="mt-2">⚠ Critical medication — don't skip</Badge>
+              <Badge tone="danger" className="mt-2">
+                <TriangleAlert className="size-3" /> Critical medication — don't skip
+              </Badge>
             )}
 
             {snoozeFor === current.logId ? (

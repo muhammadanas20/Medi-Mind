@@ -6,11 +6,11 @@ export { SLOTS }
 export const SLOT_META_ = SLOT_META
 export { foodLabel }
 
-/** "🌅 1 · 🌙 1 — After food" one-liner for cards. */
+/** "Morning 1 · Night 1 — After food" plain-text one-liner (aria labels, exports). */
 export function medSlotsSummary(med: Medication): string {
   const parts = SLOTS.filter((s) => (med.slots[s] ?? 0) > 0).map(
-    (s) => `${SLOT_META[s].emoji} ${med.slots[s]}`,
+    (s) => `${SLOT_META[s].label} ${med.slots[s]}`,
   )
-  const food = med.food !== 'any' ? ` · ${foodLabel(med.food)}` : ''
-  return `${parts.join('  ') || 'No schedule'}${food}`
+  const food = med.food !== 'any' ? ` — ${foodLabel(med.food)}` : ''
+  return `${parts.join(' · ') || 'No schedule'}${food}`
 }

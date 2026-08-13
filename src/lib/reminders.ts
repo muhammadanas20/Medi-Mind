@@ -19,11 +19,11 @@ export const DEFAULT_WINDOWS: ReminderWindows = {
   night:     { start: '21:00', end: '23:00', enabled: true },
 }
 
-export const SLOT_META: Record<Slot, { label: string; emoji: string; hint: string }> = {
-  morning:   { label: 'Morning',   emoji: '🌅', hint: '6:00 – 10:00' },
-  afternoon: { label: 'Afternoon', emoji: '☀️', hint: '12:00 – 15:00' },
-  evening:   { label: 'Evening',   emoji: '🌇', hint: '17:00 – 20:00' },
-  night:     { label: 'Night',     emoji: '🌙', hint: '21:00 – 23:00' },
+export const SLOT_META: Record<Slot, { label: string; hint: string }> = {
+  morning:   { label: 'Morning',   hint: '6:00 – 10:00' },
+  afternoon: { label: 'Afternoon', hint: '12:00 – 15:00' },
+  evening:   { label: 'Evening',   hint: '17:00 – 20:00' },
+  night:     { label: 'Night',     hint: '21:00 – 23:00' },
 }
 
 /* ------------------------------- utilities ------------------------------ */

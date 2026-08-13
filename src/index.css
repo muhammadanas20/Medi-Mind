@@ -170,15 +170,21 @@ textarea {
     radial-gradient(46rem 30rem at 55% 115%, rgb(2 132 199 / 0.12), transparent 60%);
 }
 
+/* `.glass` is used by every card in the app. It deliberately has NO
+   backdrop-filter: a blur applied to dozens of scrolling surfaces forces the
+   GPU to re-composite each of them every frame and is the main source of
+   scroll jank on phones. A slightly opaque tinted surface keeps the same
+   depth without the cost. `.glass-strong` (nav bar, dialogs, toasts, due
+   cards) keeps the blur because only a few of those exist at any time. */
 @utility glass {
-  @apply border border-white/60 bg-white/70 shadow-[0_8px_30px_rgb(0_0_0/0.06)] backdrop-blur-xl;
+  @apply border border-white/60 bg-white/80 shadow-[0_8px_30px_rgb(0_0_0/0.06)];
 }
 .dark .glass,
 .dark .glass-strong {
   @apply border-white/10;
 }
 .dark .glass {
-  @apply bg-white/[0.055] shadow-[0_8px_30px_rgb(0_0_0/0.35)];
+  @apply bg-white/[0.07] shadow-[0_8px_30px_rgb(0_0_0/0.35)];
 }
 
 @utility glass-strong {
@@ -204,12 +210,11 @@ textarea {
   }
 }
 
-/* Keep glass surfaces fluid on mobile GPUs without losing the visual depth. */
+/* Keep floating overlays fluid on mobile GPUs without losing visual depth. */
 @media (max-width: 767px) {
-  .glass,
   .glass-strong {
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
   }
 }
 

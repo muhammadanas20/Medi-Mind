@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Activity, ArrowRight, BadgeCheck, BellRing, BrainCircuit, LockKeyhole, ScanLine, Sparkles, User } from 'lucide-react'
+import { Activity, ArrowRight, BadgeCheck, BellRing, BrainCircuit, LockKeyhole, ScanLine, ShieldCheck, Sparkles, User } from 'lucide-react'
 import { useState } from 'react'
 import { emptyProfileDraft, parseProfileDraft, ProfileFields } from '../components/profile-form'
 import { Button, Card } from '../components/ui'
@@ -115,8 +115,9 @@ export function Onboarding({ done }: { done: () => void }) {
                   autoFocusName
                 />
 
-                <div className="rounded-2xl border border-brand-500/25 bg-brand-500/[0.06] p-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                  🛡️ <strong>100% Private & Local:</strong> Your age, weight, and health data remain on this device. AI uses it solely to evaluate dosage and health safety.
+                <div className="flex items-start gap-2 rounded-2xl border border-brand-500/25 bg-brand-500/[0.06] p-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                  <ShieldCheck className="mt-0.5 size-4 shrink-0 text-emerald-500" />
+                  <span><strong>100% Private & Local:</strong> Your age, weight, and health data remain on this device. AI uses it solely to evaluate dosage and health safety.</span>
                 </div>
 
                 <Button

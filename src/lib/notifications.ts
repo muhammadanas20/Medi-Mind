@@ -47,7 +47,7 @@ export function buildDoseNotification(inst: DoseInstance, isRepeat: boolean): Do
     url: `${import.meta.env.BASE_URL}#/`,
     title: isRepeat ? `Still waiting: ${inst.medicationName}` : `Time for ${inst.medicationName}`,
     body:
-      `${meta.emoji} ${meta.label} · Take ${qty}${inst.strength ? ` of ${inst.strength}` : ''}` +
+      `${meta.label} dose · Take ${qty}${inst.strength ? ` of ${inst.strength}` : ''}` +
       `${inst.food !== 'any' ? ` — ${foodLabel(inst.food).toLowerCase()}` : ''}` +
       (isRepeat ? '\nTap Taken when you swallow it.' : '\nOpen MediMind or tap Taken.'),
   }

@@ -121,9 +121,11 @@ export function AppShell() {
 
   // With hash routing the browser never scrolls back to the top on its own, so
   // a long page (Settings, Insights…) keeps the previous page's scroll offset
-  // after navigation. Reset it whenever the route changes.
+  // after navigation. Reset it whenever the route changes. `behavior: 'instant'`
+  // is required — the global `scroll-behavior: smooth` would otherwise animate
+  // the scroll on every navigation, which feels slow and janky.
   useEffect(() => {
-    window.scrollTo(0, 0)
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
     document.title = ROUTE_TITLES[location.pathname] ? `${ROUTE_TITLES[location.pathname]} · MediMind` : BASE_TITLE
   }, [location.pathname])
 
@@ -210,33 +212,31 @@ export function AppShell() {
 
         <main className="w-full min-w-0 flex-1">
           {/* Route transitions. We pass the *current* location explicitly to
-              <Routes> and key the wrapper by pathname so AnimatePresence can
-              keep the outgoing page mounted (showing its own content) while the
-              incoming page animates in. The previous pattern keyed an <Outlet/>
-              here, which made the exiting node render the *new* route instead
-              and could leave the viewport blank on navigation (e.g. tapping
-              Settings did nothing visible). */}
+              <Routes> and key the wrapper by pathname so every navigation gets
+              a fresh, correctly-scoped subtree. (An earlier pattern keyed an
+              AnimatePresence wrapper around a shared <Outlet/>; the exiting
+              node then rendered the *new* route and could leave the viewport
+              blank on navigation.) The old page now unmounts immediately and
+              only a short entry fade runs — a waiting exit animation made
+              every tab switch feel laggy. */}
           <ErrorBoundary>
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <Routes location={location}>
-                  <Route index element={<TodayPage />} />
-                  <Route path="meds" element={<LazyPage><MedsPage /></LazyPage>} />
-                  <Route path="scan" element={<LazyPage><ScanPage /></LazyPage>} />
-                  <Route path="health" element={<LazyPage><HealthPage /></LazyPage>} />
-                  <Route path="pill-id" element={<LazyPage><PillIdPage /></LazyPage>} />
-                  <Route path="insights" element={<LazyPage><InsightsPage /></LazyPage>} />
-                  <Route path="settings" element={<LazyPage><SettingsPage /></LazyPage>} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </motion.div>
-            </AnimatePresence>
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+            >
+              <Routes location={location}>
+                <Route index element={<TodayPage />} />
+                <Route path="meds" element={<LazyPage><MedsPage /></LazyPage>} />
+                <Route path="scan" element={<LazyPage><ScanPage /></LazyPage>} />
+                <Route path="health" element={<LazyPage><HealthPage /></LazyPage>} />
+                <Route path="pill-id" element={<LazyPage><PillIdPage /></LazyPage>} />
+                <Route path="insights" element={<LazyPage><InsightsPage /></LazyPage>} />
+                <Route path="settings" element={<LazyPage><SettingsPage /></LazyPage>} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </motion.div>
           </ErrorBoundary>
         </main>
 
